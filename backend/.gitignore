@@ -46,6 +46,12 @@ lerna-debug.log*
 .temp
 .tmp
 
+# Ignorar la carpeta generada por Prisma
+/generated/
+
+# Ignorar la carpeta de Prisma (si es necesario)
+prisma/
+
 # Runtime data
 pids
 *.pid
