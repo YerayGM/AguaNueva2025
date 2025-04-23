@@ -26,8 +26,7 @@ export class MunicipioService {
         });
     }
 
-    /** 
-     * ! Problema, en municipio_id no coge los municipios independientemente de si tienen id o no, ademas de que municipio_nombre coge todos los municipios.
+    /**
      * ? Posiblemente se necesite añadir municipios(preguntar a Gero).
     */
 
