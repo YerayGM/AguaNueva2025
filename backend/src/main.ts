@@ -6,9 +6,9 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const config = new DocumentBuilder()
-    .setTitle('API Agua Nueva')
-    .setDescription('API description')
-    .setVersion('1.0')
+    .setTitle('API Agua Nueva.')
+    .setDescription('Esto son las rutas para la app web de Agua Nueva, una app web del Cabildo de Fuerteventura.')
+    .setVersion('33')
     .build();
   
   const documentFactory = () => SwaggerModule.createDocument(app, config);
