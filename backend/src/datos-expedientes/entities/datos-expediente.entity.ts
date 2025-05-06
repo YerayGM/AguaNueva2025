@@ -4,7 +4,7 @@ import { Materia } from '../../materias/entities/materia.entity';
 
 @Entity('DatosExpediente')
 @Index('idx_expediente_completo', ['expediente', 'hoja', 'orden'])
-@Index('idx_materia', ['idMateria'])
+@Index('idx_materia', ['materia'])
 export class DatosExpediente {
   @PrimaryGeneratedColumn()
   id: number;

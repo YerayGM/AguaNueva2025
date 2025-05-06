@@ -18,7 +18,6 @@ import { MateriasModule } from './materias/materias.module';
       database: process.env.DB_NAME,
       username: process.env.DB_USER,
       password: process.env.MYSQL_ROOT_PASSWORD,
-      synchronize: true,
       autoLoadEntities: true,
     }),
     MunicipiosModule,

@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@astrojs/ts-plugin": "^1.10.4",
-    "astro": "^5.7.10"
+    "@tailwindcss/vite": "^4.1.5",
+    "astro": "^5.7.10",
+    "tailwindcss": "^4.1.5"
   }
 }
