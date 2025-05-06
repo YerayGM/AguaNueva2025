@@ -1,14 +1,30 @@
 import { Module } from '@nestjs/common';
-import { MunicipioModule } from './modules/municipio/municipio.module';
-import { MateriaModule } from './modules/materia/materia.module';
-import { ExpedienteModule } from './modules/expediente/expediente.module';
-import { DatosExpedienteModule } from './modules/datos-expediente/datos-expediente.module';
-import { DatosPersonaModule } from './modules/datos-persona/datos-persona.module';
-import { ContadorModule } from './modules/contador/contador.module';
+import { ConfigModule } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { MunicipiosModule } from './municipios/municipios.module';
+import { ExpedientesModule } from './expedientes/expedientes.module';
+import { DatosPersonalesModule } from './datos-personales/datos-personales.module';
+import { DatosExpedientesModule } from './datos-expedientes/datos-expedientes.module';
+import { MateriasModule } from './materias/materias.module';
+
 
 @Module({
-  imports: [MunicipioModule, MateriaModule, ExpedienteModule, DatosExpedienteModule, DatosPersonaModule, ContadorModule],
-  controllers: [],
-  providers: [],
+  imports: [
+    ConfigModule.forRoot(),
+    TypeOrmModule.forRoot({
+      type: 'mysql',
+      host: process.env.DB_HOST,
+      port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : undefined,
+      database: process.env.DB_NAME,
+      username: process.env.DB_USER,
+      password: process.env.MYSQL_ROOT_PASSWORD,
+      synchronize: true,
+      autoLoadEntities: true,
+    }),
+    MunicipiosModule,
+    ExpedientesModule,
+    DatosPersonalesModule,
+    DatosExpedientesModule,
+    MateriasModule,],
 })
 export class AppModule {}
