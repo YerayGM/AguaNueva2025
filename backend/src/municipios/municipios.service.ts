@@ -1,26 +1,43 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Municipio } from './entities/municipio.entity';
 import { CreateMunicipioDto } from './dto/create-municipio.dto';
 import { UpdateMunicipioDto } from './dto/update-municipio.dto';
 
 @Injectable()
 export class MunicipiosService {
-  create(createMunicipioDto: CreateMunicipioDto) {
-    return 'This action adds a new municipio';
+  constructor(
+    @InjectRepository(Municipio)
+    private readonly municipioRepository: Repository<Municipio>,
+  ) {}
+
+  async create(createMunicipioDto: CreateMunicipioDto): Promise<Municipio> {
+    const municipio = this.municipioRepository.create(createMunicipioDto);
+    return this.municipioRepository.save(municipio);
   }
 
-  findAll() {
-    return `This action returns all municipios`;
+  async findAll(): Promise<Municipio[]> {
+    return this.municipioRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} municipio`;
+  async findOne(id: number): Promise<Municipio> {
+    const municipio = await this.municipioRepository.findOneBy({ idMunicipio: id });
+    if (!municipio) {
+      throw new Error(`Municipio with ID ${id} not found`);
+    }
+    return municipio;
   }
 
-  update(id: number, updateMunicipioDto: UpdateMunicipioDto) {
-    return `This action updates a #${id} municipio`;
+  async update(id: number, updateMunicipioDto: UpdateMunicipioDto): Promise<Municipio> {
+    await this.municipioRepository.update(id, updateMunicipioDto);
+    return this.findOne(id);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} municipio`;
+  async remove(id: number): Promise<void> {
+    const result = await this.municipioRepository.delete(id);
+    if (result.affected === 0) {
+      throw new Error(`Municipio with ID ${id} not found`);
+    }
   }
 }

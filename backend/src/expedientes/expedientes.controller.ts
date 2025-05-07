@@ -17,18 +17,18 @@ export class ExpedientesController {
     return this.expedientesService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.expedientesService.findOne(+id);
+  @Get(':idExpediente/:hoja')
+  findOne(@Param('idExpediente') idExpediente: string, @Param('hoja') hoja: number) {
+    return this.expedientesService.findOne(idExpediente, hoja);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateExpedienteDto: UpdateExpedienteDto) {
-    return this.expedientesService.update(+id, updateExpedienteDto);
+  @Patch(':idExpediente/:hoja')
+  update(@Param('idExpediente') idExpediente: string, @Param('hoja') hoja: number, @Body() updateExpedienteDto: UpdateExpedienteDto) {
+    return this.expedientesService.update(idExpediente, hoja, updateExpedienteDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.expedientesService.remove(+id);
+  @Delete(':idExpediente/:hoja')
+  remove(@Param('idExpediente') idExpediente: string, @Param('hoja') hoja: number) {
+    return this.expedientesService.remove(idExpediente, hoja);
   }
 }

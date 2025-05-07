@@ -1,11 +1,22 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { ApiKeyGuard } from './common/guards/api-key.guard';
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.setGlobalPrefix('api');
+
+  // Enable CORS for all origins
+  app.enableCors();
+
+  // Use global validation pipe
+  app.useGlobalPipes(new ValidationPipe());
+
+  // Apply API key guard globally
+  app.useGlobalGuards(new ApiKeyGuard());
 
   const config = new DocumentBuilder()
     .setTitle('API Agua Nueva.')

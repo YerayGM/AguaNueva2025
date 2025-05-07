@@ -1,64 +1,67 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
+import { Entity, PrimaryColumn, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { Expediente } from '../../expedientes/entities/expedientes.entity';
 import { Materia } from '../../materias/entities/materia.entity';
 
 @Entity('DatosExpediente')
-@Index('idx_expediente_completo', ['expediente', 'hoja', 'orden'])
-@Index('idx_materia', ['materia'])
+@Index('idx_expediente_completo', ['IdExpediente', 'Hoja', 'Orden'])
+@Index('idx_materia', ['IdMateria'])
 export class DatosExpediente {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryColumn({ type: 'char', length: 10, name: 'IdExpediente' })
+  IdExpediente: string;
+
+  @PrimaryColumn({ type: 'int', default: 0 })
+  Hoja: number;
+
+  @PrimaryColumn({ type: 'int', default: 0 })
+  Orden: number;
 
   @ManyToOne(() => Expediente)
   @JoinColumn([
-    { name: 'Expediente', referencedColumnName: 'expediente' },
-    { name: 'Hoja', referencedColumnName: 'hoja' },
+    { name: 'IdExpediente', referencedColumnName: 'IdExpediente' },
+    { name: 'Hoja', referencedColumnName: 'Hoja' },
   ])
-  expediente: Expediente;
-
-  @Column({ type: 'int', default: 0 })
-  hoja: number;
-
-  @Column({ type: 'int', default: 0 })
-  orden: number;
+  Expediente: Expediente;
 
   @Column({ type: 'varchar', length: 100, nullable: true })
-  cultivo: string | null;
+  Cultivo: string | null;
 
   @Column({ type: 'int', nullable: true })
-  poligono: number | null;
+  Poligono: number | null;
 
   @Column({ type: 'int', nullable: true })
-  parcela: number | null;
+  Parcela: number | null;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
-  recinto: string | null;
+  Recinto: string | null;
+
+  @Column({ type: 'int', name: 'IdMateria' })
+  IdMateria: number;
 
   @ManyToOne(() => Materia)
   @JoinColumn({ name: 'IdMateria' })
-  materia: Materia;
+  Materia: Materia;
 
   @Column({ type: 'double', default: 0 })
-  multiplicador: number;
+  Multiplicador: number;
 
   @Column({ type: 'int', default: 0 })
-  minimo: number;
+  Minimo: number;
 
   @Column({ type: 'int', default: 0 })
-  maximo: number;
+  Maximo: number;
 
   @Column({ type: 'int', default: 0 })
-  cantidad: number;
+  Cantidad: number;
 
   @Column({ type: 'int', default: 0 })
-  cantidadInicial: number;
+  CantidadInicial: number;
 
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
-  desde: Date;
+  Desde: Date;
 
   @Column({ type: 'datetime', nullable: true })
-  hasta: Date | null;
+  Hasta: Date | null;
 
   @Column({ type: 'tinyint', nullable: true })
-  cuatrimestre: number | null;
+  Cuatrimestre: number | null;
 }

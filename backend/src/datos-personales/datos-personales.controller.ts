@@ -19,16 +19,16 @@ export class DatosPersonalesController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.datosPersonalesService.findOne(+id);
+    return this.datosPersonalesService.findOne(id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateDatosPersonaleDto: UpdateDatosPersonaleDto) {
-    return this.datosPersonalesService.update(+id, updateDatosPersonaleDto);
+    return this.datosPersonalesService.update(id, updateDatosPersonaleDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.datosPersonalesService.remove(+id);
+    return this.datosPersonalesService.remove(id);
   }
 }

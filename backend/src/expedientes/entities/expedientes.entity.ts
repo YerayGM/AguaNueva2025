@@ -1,58 +1,55 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, Index, Unique } from 'typeorm';
+import { Entity, PrimaryColumn, Column, ManyToOne, JoinColumn, Index, Unique } from 'typeorm';
 import { DatosPersonales } from '../../datos-personales/entities/datos-personales.entity';
 import { Municipio } from '../../municipios/entities/municipio.entity';
 
 @Entity('Expedientes')
-@Unique('idx_expediente_hoja', ['expediente', 'hoja'])
-@Index('idx_fecha', ['fecha'])
+@Unique('idx_expediente_hoja', ['IdExpediente', 'Hoja'])
+@Index('idx_fecha', ['Fecha'])
 export class Expediente {
-  @PrimaryGeneratedColumn({ type: 'int', unsigned: true })
-  id: number;
+  @PrimaryColumn({ type: 'char', length: 10, name: 'IdExpediente' })
+  IdExpediente: string;
 
-  @Column({ type: 'char', length: 8 })
-  expediente: string;
-
-  @Column({ type: 'int', default: 0 })
-  hoja: number;
+  @PrimaryColumn({ type: 'int', default: 0 })
+  Hoja: number;
 
   @ManyToOne(() => DatosPersonales)
   @JoinColumn({ name: 'Dni' })
-  datosPersonales: DatosPersonales;
+  DatosPersonales: DatosPersonales;
 
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
-  fecha: Date;
+  Fecha: Date;
 
   @Column({ type: 'varchar', length: 50, default: '' })
-  lugar: string;
+  Lugar: string;
 
   @Column({ type: 'varchar', length: 50, default: '' })
-  localidad: string;
+  Localidad: string;
 
   @ManyToOne(() => Municipio)
   @JoinColumn({ name: 'IdMunicipio' })
-  municipio: Municipio;
+  Municipio: Municipio;
 
   @Column({ type: 'varchar', length: 50, default: '' })
-  contadorNombre: string;
+  ContadorNombre: string;
 
   @Column({ type: 'varchar', length: 30, default: '' })
-  contadorPoliza: string;
+  ContadorPoliza: string;
 
   @Column({ type: 'text', nullable: true })
-  observaciones: string | null;
+  Observaciones: string | null;
 
   @Column({ type: 'varchar', length: 50, default: '' })
-  tecnico: string;
+  Tecnico: string;
 
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
-  fechaInforme: Date;
+  FechaInforme: Date;
 
   @Column({ type: 'int', default: 0 })
-  dias: number;
+  Dias: number;
 
   @Column({ type: 'text', nullable: true })
-  observacionesTecnico: string | null;
+  ObservacionesTecnico: string | null;
 
   @Column({ type: 'text', nullable: true })
-  textoInforme: string | null;
+  TextoInforme: string | null;
 }
