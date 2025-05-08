@@ -18,3 +18,18 @@ export interface Expediente {
   ObservacionesTecnico: string | null;
   TextoInforme: string | null;
 }
+
+export interface CreateExpedienteDto {
+  IdExpediente: string;
+  Dni: string;
+  Fecha: string;
+  Lugar: string;
+  Localidad: string;
+  IdMunicipio: string;
+  ContadorNombre: string;
+  ContadorPoliza: string;
+  Observaciones?: string;
+  Tecnico: string;
+  FechaInforme: string;
+  ObservacionesTecnico?: string;
+}

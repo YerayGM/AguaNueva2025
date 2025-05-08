@@ -1,27 +1,98 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { expedientesApi } from '@/app/api/axios.config';
-import { Expediente } from '@/app/types/Expediente';
+import { CreateExpedienteDto } from '@/app/types/Expediente';
+import { Municipio } from '@/app/types/DatosPersonales';
+import { Button } from '@/app/components/ui/Button';
+import { DatosExpedienteForm } from '@/app/components/Expedientes/DatosExpedienteForm';
+import { CuatrimestresTable } from '@/app/components/Expedientes/CuatrimestresTable';
+import { DatosTecnicoForm } from '@/app/components/Expedientes/DatosTecnicoForm';
+import { generateId } from '@/app/utils/generateId';
+import axios from 'axios';
+
+interface CuatrimestreRow {
+  id: string;
+  concepto: string;
+  multi: number;
+  mini: number;
+  cant: number;
+  inf: string;
+  desde: string;
+  hasta: string;
+  pd: string;
+  pa: string;
+  rc: string;
+  cultivo: string;
+}
 
 export default function CreateExpedientePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [municipios, setMunicipios] = useState<Municipio[]>([]);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CreateExpedienteDto>({
     IdExpediente: '',
-    Hoja: 0,
+    Dni: '',
+    Fecha: new Date().toISOString().split('T')[0],
     Lugar: '',
     Localidad: '',
+    IdMunicipio: '',
     ContadorNombre: '',
     ContadorPoliza: '',
     Observaciones: '',
     Tecnico: '',
-    Dias: 0,
+    FechaInforme: new Date().toISOString().split('T')[0],
     ObservacionesTecnico: '',
   });
+
+  const [cuatrimestres, setCuatrimestres] = useState<CuatrimestreRow[]>([
+    {
+      id: generateId(),
+      concepto: '',
+      multi: 0,
+      mini: 0,
+      cant: 0,
+      inf: '',
+      desde: '',
+      hasta: '',
+      pd: '',
+      pa: '',
+      rc: '',
+      cultivo: ''
+    }
+  ]);
+
+  useEffect(() => {
+    const fetchMunicipios = async () => {
+      try {
+        const response = await axios.get<Municipio[]>('http://localhost:3000/api/municipios', {
+          headers: { 'x-api-key': process.env.NEXT_PUBLIC_API_KEY || 'my-secret-api-key' }
+        });
+        setMunicipios(response.data);
+      } catch (err) {
+        console.error('Error al cargar municipios:', err);
+        setError('Error al cargar los municipios');
+      }
+    };
+
+    fetchMunicipios();
+  }, []);
+
+  const handleFieldChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleCuatrimestreChange = (index: number, field: keyof CuatrimestreRow, value: string | number) => {
+    const newCuatrimestres = [...cuatrimestres];
+    newCuatrimestres[index] = {
+      ...newCuatrimestres[index],
+      [field]: value
+    };
+    setCuatrimestres(newCuatrimestres);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,34 +100,70 @@ export default function CreateExpedientePage() {
     setError(null);
 
     try {
-      await expedientesApi.create(formData);
-      router.push('/pages/Expedientes');
+      const expedienteData = {
+        ...formData,
+        cuatrimestres: cuatrimestres.map(({ id, ...rest }) => rest)
+      };
+      await expedientesApi.create(expedienteData);
+      router.push('/expedientes');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al crear el expediente');
-      console.error('Error al crear expediente:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'Hoja' || name === 'Dias' ? parseInt(value) || 0 : value
-    }));
+  // Handlers para acciones específicas
+  const handleGenerarNuevaHoja = () => {
+    setCuatrimestres(prev => [...prev, {
+      id: generateId(),
+      concepto: '',
+      multi: 0,
+      mini: 0,
+      cant: 0,
+      inf: '',
+      desde: '',
+      hasta: '',
+      pd: '',
+      pa: '',
+      rc: '',
+      cultivo: ''
+    }]);
+  };
+
+  const handleImprimirSolicitud = () => {
+    // Implementar lógica
+    console.log('Imprimir solicitud');
+  };
+
+  const handleDeclararActividad = () => {
+    // Implementar lógica
+    console.log('Declarar actividad');
+  };
+
+  const handleCompromisos = () => {
+    // Implementar lógica
+    console.log('Ver compromisos');
+  };
+
+  const handleRellenarA = () => {
+    // Implementar lógica
+    console.log('Rellenar A');
+  };
+
+  const handleRellenarB = () => {
+    // Implementar lógica
+    console.log('Rellenar B');
+  };
+
+  const handleVerMetros = () => {
+    // Implementar lógica
+    console.log('Ver metros');
   };
 
   return (
     <div className="container mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2 text-verdeCabildo">Nuevo Expediente</h1>
-        <p className="text-gray-600">
-          Crear un nuevo expediente de subvención
-        </p>
-      </div>
-
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white rounded-lg shadow-lg p-6">
         {error && (
           <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
             {error}
@@ -64,116 +171,52 @@ export default function CreateExpedientePage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                ID Expediente
-              </label>
-              <input
-                type="text"
-                name="IdExpediente"
-                value={formData.IdExpediente}
-                onChange={handleChange}
-                className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-verdeCabildo focus:border-transparent"
-                required
-              />
-            </div>
+          <DatosExpedienteForm
+            expedienteId={formData.IdExpediente}
+            dni={formData.Dni}
+            fecha={formData.Fecha}
+            lugar={formData.Lugar}
+            localidad={formData.Localidad}
+            municipioId={formData.IdMunicipio}
+            municipios={municipios}
+            contadorNombre={formData.ContadorNombre}
+            contadorPoliza={formData.ContadorPoliza}
+            onFieldChange={handleFieldChange}
+            onGenerarNuevaHoja={handleGenerarNuevaHoja}
+            onImprimirSolicitud={handleImprimirSolicitud}
+            onDeclararActividad={handleDeclararActividad}
+            onCompromisos={handleCompromisos}
+          />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Hoja
-              </label>
-              <input
-                type="number"
-                name="Hoja"
-                value={formData.Hoja}
-                onChange={handleChange}
-                className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-verdeCabildo focus:border-transparent"
-                required
-              />
-            </div>
+          <CuatrimestresTable
+            rows={cuatrimestres}
+            onRowChange={handleCuatrimestreChange}
+          />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Lugar
-              </label>
-              <input
-                type="text"
-                name="Lugar"
-                value={formData.Lugar}
-                onChange={handleChange}
-                className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-verdeCabildo focus:border-transparent"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Localidad
-              </label>
-              <input
-                type="text"
-                name="Localidad"
-                value={formData.Localidad}
-                onChange={handleChange}
-                className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-verdeCabildo focus:border-transparent"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nombre del Contador
-              </label>
-              <input
-                type="text"
-                name="ContadorNombre"
-                value={formData.ContadorNombre}
-                onChange={handleChange}
-                className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-verdeCabildo focus:border-transparent"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Póliza del Contador
-              </label>
-              <input
-                type="text"
-                name="ContadorPoliza"
-                value={formData.ContadorPoliza}
-                onChange={handleChange}
-                className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-verdeCabildo focus:border-transparent"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Observaciones
-            </label>
-            <textarea
-              name="Observaciones"
-              value={formData.Observaciones}
-              onChange={handleChange}
-              rows={3}
-              className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-verdeCabildo focus:border-transparent"
-            />
-          </div>
+          <DatosTecnicoForm
+            tecnico={formData.Tecnico}
+            fechaInforme={formData.FechaInforme}
+            observaciones={formData.ObservacionesTecnico || ''}
+            onFieldChange={handleFieldChange}
+            onRellenarA={handleRellenarA}
+            onRellenarB={handleRellenarB}
+            onVerMetros={handleVerMetros}
+          />
 
           <div className="flex justify-end space-x-4">
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={() => router.back()}
-              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
             >
               Cancelar
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 bg-verdeCabildo text-white rounded-md hover:bg-green-700 disabled:opacity-50"
             >
-              {loading ? 'Creando...' : 'Crear Expediente'}
-            </button>
+              {loading ? 'Guardando...' : 'Crear Expediente'}
+            </Button>
           </div>
         </form>
       </div>

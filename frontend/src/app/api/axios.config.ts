@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { DatosPersonales } from '../types/DatosPersonales';
-import { Expediente } from '../types/Expediente';
+import { Expediente, CreateExpedienteDto } from '../types/Expediente';
 
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY || 'my-secret-api-key';
 
@@ -8,7 +8,7 @@ const api = axios.create({
   baseURL: 'http://localhost:3000/api',
   headers: {
     'Content-Type': 'application/json',
-    'x-api-key': API_KEY, // Cambiado a x-api-key para coincidir con el backend
+    'x-api-key': API_KEY,
   },
 });
 
@@ -22,16 +22,24 @@ api.interceptors.response.use(
         console.error('Error de autenticación: API key inválida o faltante');
       }
     } else if (error.request) {
-      console.error('Error de conexión. Asegúrese de que el backend está ejecutándose en el puerto 3000');
+      console.error('Error de conexión. Asegúrese de que el backend está ejecutándose:', error.request);
     } else {
       console.error('Error:', error.message);
     }
-    return Promise.reject({
-      ...error,
-      message: error.response?.data?.message || error.message
-    });
+    return Promise.reject(error);
   }
 );
+
+const transformToExpediente = (dto: CreateExpedienteDto): Partial<Expediente> => {
+  return {
+    ...dto,
+    Fecha: new Date(dto.Fecha),
+    FechaInforme: new Date(dto.FechaInforme),
+    Observaciones: dto.Observaciones || null,
+    ObservacionesTecnico: dto.ObservacionesTecnico || null,
+    TextoInforme: null,
+  };
+};
 
 export const datosPersonalesApi = {
   getAll: () => api.get<DatosPersonales[]>('/datos-personales'),
@@ -44,9 +52,9 @@ export const datosPersonalesApi = {
 export const expedientesApi = {
   getAll: () => api.get<Expediente[]>('/expedientes'),
   getById: (id: string, hoja: number) => api.get<Expediente>(`/expedientes/${id}/${hoja}`),
-  create: (data: Partial<Expediente>) => api.post('/expedientes', data),
-  update: (id: string, hoja: number, data: Partial<Expediente>) => 
-    api.patch(`/expedientes/${id}/${hoja}`, data),
+  create: (data: CreateExpedienteDto) => api.post('/expedientes', transformToExpediente(data)),
+  update: (id: string, hoja: number, data: CreateExpedienteDto) => 
+    api.patch(`/expedientes/${id}/${hoja}`, transformToExpediente(data)),
   delete: (id: string, hoja: number) => api.delete(`/expedientes/${id}/${hoja}`),
 };
 
