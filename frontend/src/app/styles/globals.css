@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --verdeCabildo: #2B7D4B;
+  --color-verdeCabildo: #017a9a;
 }
 
 body {
@@ -9,12 +9,13 @@ body {
   min-height: 100vh;
 }
 
+
 .text-verdeCabildo {
-  color: var(--verdeCabildo);
+  color: var(--color-verdeCabildo);
 }
 
 .bg-verdeCabildo {
-  background-color: var(--verdeCabildo);
+  background-color: var(--color-verdeCabildo);
 }
 
 .hover\:bg-verdeCabildo:hover {

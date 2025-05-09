@@ -18,13 +18,6 @@ export default function ExpedientesPage() {
               Consulta y gestiona los expedientes existentes
             </p>
           </div>
-          <a 
-            href="/pages/Expedientes/create"
-            className="bg-verdeCabildo hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center"
-          >
-            <span className="mr-2">+</span>
-            Nuevo Expediente
-          </a>
         </div>
         
         <ExpedientesTable />
