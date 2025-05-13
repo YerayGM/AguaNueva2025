@@ -1,54 +1,55 @@
-import { Entity, PrimaryColumn, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
-import { DatosPersonales } from '../../datos-personales/entities/datos-personales.entity';
-import { Municipio } from '../../municipios/entities/municipio.entity';
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity('Expedientes')
-@Index('idx_fecha', ['fecha'])
+@Entity('expedientes')
 export class Expediente {
-  @PrimaryColumn({ type: 'char', length: 10 })
-  idExpediente: string;
+  @PrimaryGeneratedColumn({ unsigned: true })
+  ID: number;
 
-  @PrimaryColumn({ type: 'int' })
-  hoja: number;
-
-  @ManyToOne(() => DatosPersonales, { onDelete: 'RESTRICT', onUpdate: 'CASCADE' })
-  @JoinColumn({ name: 'dni' })
-  datosPersonales: DatosPersonales;
-
-  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
-  fecha: Date;
-
-  @Column({ type: 'varchar', length: 50, default: '' })
-  lugar: string;
-
-  @Column({ type: 'varchar', length: 50, default: '' })
-  localidad: string;
-
-  @ManyToOne(() => Municipio, { onDelete: 'RESTRICT', onUpdate: 'CASCADE' })
-  @JoinColumn({ name: 'idMunicipio' })
-  municipio: Municipio;
-
-  @Column({ type: 'varchar', length: 50, default: '' })
-  contadorNombre: string;
-
-  @Column({ type: 'varchar', length: 30, default: '' })
-  contadorPoliza: string;
-
-  @Column({ type: 'text', nullable: true })
-  observaciones: string;
-
-  @Column({ type: 'varchar', length: 50, default: '' })
-  tecnico: string;
-
-  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
-  fechaInforme: Date;
+  @Column({ type: 'char', length: 8, charset: 'latin1', collation: 'latin1_spanish_ci', default: '.' })
+  EXPEDIENTE: string;
 
   @Column({ type: 'int', default: 0 })
-  dias: number;
+  HOJA: number;
 
-  @Column({ type: 'text', nullable: true })
-  observacionesTecnico: string;
+  @Column({ type: 'char', length: 12, charset: 'latin1', collation: 'latin1_spanish_ci', default: '.' })
+  DNI: string;
 
-  @Column({ type: 'text', nullable: true })
-  textoInforme: string;
+  @Column({ type: 'datetime', default: () => "'0000-00-00 00:00:00'" })
+  FECHA: Date;
+
+  @Column({ type: 'char', length: 50, charset: 'latin1', collation: 'latin1_spanish_ci', default: '.' })
+  LUGAR: string;
+
+  @Column({ type: 'char', length: 50, charset: 'latin1', collation: 'latin1_spanish_ci', default: '.' })
+  LOCALIDAD: string;
+
+  @Column({ type: 'int', default: 0 })
+  ID_MUN: number;
+
+  @Column({ type: 'char', length: 50, charset: 'latin1', collation: 'latin1_spanish_ci', default: '.' })
+  CONT_NOMBRE: string;
+
+  @Column({ type: 'char', length: 30, charset: 'latin1', collation: 'latin1_spanish_ci', default: '.' })
+  CONT_POLIZA: string;
+
+  @Column({ type: 'char', length: 255, charset: 'latin1', collation: 'latin1_spanish_ci', default: '.' })
+  OBSER: string;
+
+  @Column({ type: 'char', length: 50, charset: 'latin1', collation: 'latin1_spanish_ci', default: '.' })
+  TECNICO: string;
+
+  @Column({ type: 'datetime', default: () => "'2013-01-01 00:00:00'" })
+  FECHA_I: Date;
+
+  @Column({ type: 'int', default: 0 })
+  DIAS: number;
+
+  @Column({ type: 'char', length: 255, charset: 'latin1', collation: 'latin1_spanish_ci', default: '.' })
+  OB_TEC: string;
+
+  @Column({ type: 'char', length: 255, charset: 'latin1', collation: 'latin1_spanish_ci', default: '.' })
+  TXT_INFORME: string;
+
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
+  DUMMY: Date;
 }

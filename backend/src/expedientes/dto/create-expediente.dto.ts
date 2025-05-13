@@ -1,56 +1,63 @@
-import { IsString, IsDateString, IsInt, IsOptional, Length, Min } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsInt } from 'class-validator';
 
 export class CreateExpedienteDto {
+  @IsNotEmpty()
   @IsString()
-  @Length(10, 10)
-  idExpediente: string;
+  EXPEDIENTE: string;
 
+  @IsNotEmpty()
   @IsInt()
-  @Min(0)
-  hoja: number;
+  HOJA: number;
 
+  @IsNotEmpty()
   @IsString()
-  @Length(12, 12)
-  dni: string;
+  DNI: string;
 
-  @IsDateString()
-  fecha: string;
-
+  @IsOptional()
   @IsString()
-  @Length(0, 50)
-  lugar: string;
+  FECHA?: string;
 
+  @IsNotEmpty()
   @IsString()
-  @Length(0, 50)
-  localidad: string;
+  LUGAR: string;
 
+  @IsNotEmpty()
+  @IsString()
+  LOCALIDAD: string;
+
+  @IsNotEmpty()
   @IsInt()
-  idMunicipio: number;
+  ID_MUN: number;
 
+  @IsNotEmpty()
   @IsString()
-  @Length(0, 50)
-  contadorNombre: string;
+  CONT_NOMBRE: string;
 
+  @IsNotEmpty()
   @IsString()
-  @Length(0, 30)
-  contadorPoliza: string;
+  CONT_POLIZA: string;
 
   @IsOptional()
   @IsString()
-  observaciones?: string;
-
-  @IsString()
-  @Length(0, 50)
-  tecnico: string;
-
-  @IsDateString()
-  fechaInforme: string;
+  OBSER?: string;
 
   @IsOptional()
   @IsString()
-  observacionesTecnico?: string;
+  TECNICO?: string;
 
   @IsOptional()
   @IsString()
-  textoInforme?: string;
+  FECHA_I?: string;
+
+  @IsOptional()
+  @IsInt()
+  DIAS?: number;
+
+  @IsOptional()
+  @IsString()
+  OB_TEC?: string;
+
+  @IsOptional()
+  @IsString()
+  TXT_INFORME?: string;
 }

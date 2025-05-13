@@ -1,26 +1,28 @@
-import { Entity, PrimaryGeneratedColumn, Column, Index } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity('Materia')
-@Index('idx_tipo_materia', ['tipo', 'materia'])
+@Entity('materia')
 export class Materia {
   @PrimaryGeneratedColumn()
-  id: number;
+  ID: number;
 
   @Column({ type: 'int', default: 0 })
-  orden: number;
+  ORDEN: number;
 
-  @Column({ type: 'varchar', length: 50 })
-  tipo: string;
+  @Column({ type: 'varchar', length: 50, charset: 'latin1', collation: 'latin1_spanish_ci' })
+  TIPO: string;
 
-  @Column({ type: 'varchar', length: 30 })
-  materia: string;
-
-  @Column({ type: 'double', default: 0 })
-  multiplicador: number;
+  @Column({ type: 'varchar', length: 30, charset: 'latin1', collation: 'latin1_spanish_ci' })
+  MATERIA: string;
 
   @Column({ type: 'double', default: 0 })
-  minimo: number;
+  MULTIPLICADOR: number;
 
   @Column({ type: 'double', default: 0 })
-  maximo: number;
+  MINIMO: number;
+
+  @Column({ type: 'double', default: 0 })
+  MAXIMO: number;
+
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
+  DUMMY: Date;
 }

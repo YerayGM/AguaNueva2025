@@ -9,35 +9,27 @@ import { UpdateMunicipioDto } from './dto/update-municipio.dto';
 export class MunicipiosService {
   constructor(
     @InjectRepository(Municipio)
-    private readonly municipioRepository: Repository<Municipio>,
+    private readonly municipiosRepository: Repository<Municipio>,
   ) {}
 
-  async create(createMunicipioDto: CreateMunicipioDto): Promise<Municipio> {
-    const municipio = this.municipioRepository.create(createMunicipioDto);
-    return this.municipioRepository.save(municipio);
+  create(createMunicipioDto: CreateMunicipioDto) {
+    const municipio = this.municipiosRepository.create(createMunicipioDto);
+    return this.municipiosRepository.save(municipio);
   }
 
-  async findAll(): Promise<Municipio[]> {
-    return this.municipioRepository.find();
+  findAll() {
+    return this.municipiosRepository.find();
   }
 
-  async findOne(id: number): Promise<Municipio> {
-    const municipio = await this.municipioRepository.findOneBy({ idMunicipio: id });
-    if (!municipio) {
-      throw new Error(`Municipio with ID ${id} not found`);
-    }
-    return municipio;
+  findOne(id: number) {
+    return this.municipiosRepository.findOne({ where: { ID_MUN: id } });
   }
 
-  async update(id: number, updateMunicipioDto: UpdateMunicipioDto): Promise<Municipio> {
-    await this.municipioRepository.update(id, updateMunicipioDto);
-    return this.findOne(id);
+  update(id: number, updateMunicipioDto: UpdateMunicipioDto) {
+    return this.municipiosRepository.update(id, updateMunicipioDto);
   }
 
-  async remove(id: number): Promise<void> {
-    const result = await this.municipioRepository.delete(id);
-    if (result.affected === 0) {
-      throw new Error(`Municipio with ID ${id} not found`);
-    }
+  remove(id: number) {
+    return this.municipiosRepository.delete(id);
   }
 }

@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindOptionsWhere } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Expediente } from './entities/expedientes.entity';
+import { Municipio } from '../municipios/entities/municipio.entity';
 import { CreateExpedienteDto } from './dto/create-expediente.dto';
 import { UpdateExpedienteDto } from './dto/update-expediente.dto';
 
@@ -9,41 +10,41 @@ import { UpdateExpedienteDto } from './dto/update-expediente.dto';
 export class ExpedientesService {
   constructor(
     @InjectRepository(Expediente)
-    private readonly expedienteRepository: Repository<Expediente>,
+    private readonly expedientesRepository: Repository<Expediente>,
+    @InjectRepository(Municipio)
+    private readonly municipiosRepository: Repository<Municipio>,
   ) {}
 
-  async create(createExpedienteDto: CreateExpedienteDto): Promise<Expediente> {
-    const expediente = this.expedienteRepository.create(createExpedienteDto as unknown as Partial<Expediente>);
-    return this.expedienteRepository.save(expediente);
+  create(createExpedienteDto: CreateExpedienteDto) {
+    const expediente = this.expedientesRepository.create(createExpedienteDto);
+    return this.expedientesRepository.save(expediente);
   }
 
-  async findAll(): Promise<Expediente[]> {
-    return this.expedienteRepository.find({ relations: ['DatosPersonales', 'Municipio'] });
+  findAll() {
+    return this.expedientesRepository.find();
   }
 
-  async findOne(IdExpediente: string, Hoja: number): Promise<Expediente> {
-    const where: FindOptionsWhere<Expediente> = { IdExpediente, Hoja };
-    const expediente = await this.expedienteRepository.findOne({
-      where,
-      relations: ['DatosPersonales', 'Municipio'],
-    });
-    if (!expediente) {
-      throw new Error(`Expediente with ID ${IdExpediente} and Hoja ${Hoja} not found`);
+  findOne(id: number) {
+    return this.expedientesRepository.findOne({ where: { ID: id } });
+  }
+
+  findByDni(dni: string) {
+    return this.expedientesRepository.find({ where: { DNI: dni } });
+  }
+
+  async findByMunicipio(idMunicipio: number) {
+    const municipio = await this.municipiosRepository.findOne({ where: { ID_MUN: idMunicipio } });
+    if (!municipio) {
+      throw new Error(`No se encontró el municipio con ID ${idMunicipio}`);
     }
-    return expediente;
+    return this.expedientesRepository.find({ where: { LOCALIDAD: municipio.MUNICIPIO } });
   }
 
-  async update(IdExpediente: string, Hoja: number, updateExpedienteDto: UpdateExpedienteDto): Promise<Expediente> {
-    const where: FindOptionsWhere<Expediente> = { IdExpediente, Hoja };
-    await this.expedienteRepository.update(where, updateExpedienteDto as unknown as Partial<Expediente>);
-    return this.findOne(IdExpediente, Hoja);
+  update(id: number, updateExpedienteDto: UpdateExpedienteDto) {
+    return this.expedientesRepository.update(id, updateExpedienteDto);
   }
 
-  async remove(IdExpediente: string, Hoja: number): Promise<void> {
-    const where: FindOptionsWhere<Expediente> = { IdExpediente, Hoja };
-    const result = await this.expedienteRepository.delete(where);
-    if (result.affected === 0) {
-      throw new Error(`Expediente with ID ${IdExpediente} and Hoja ${Hoja} not found`);
-    }
+  remove(id: number) {
+    return this.expedientesRepository.delete(id);
   }
 }

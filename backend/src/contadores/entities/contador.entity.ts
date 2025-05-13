@@ -1,12 +1,12 @@
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity('municipios')
-export class Municipio {
+@Entity('contadores')
+export class Contador {
   @PrimaryGeneratedColumn()
-  ID_MUN: number;
+  ID: number;
 
-  @Column({ type: 'varchar', length: 50, charset: 'latin1', collation: 'latin1_spanish_ci' })
-  MUNICIPIO: string;
+  @Column({ type: 'int', default: 0 })
+  CONTADOR: number;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
   DUMMY: Date;

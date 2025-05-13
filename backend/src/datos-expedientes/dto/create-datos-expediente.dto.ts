@@ -1,71 +1,67 @@
-import { IsDate, IsNumber, IsOptional, IsPositive, IsString, MinLength, ValidateIf } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsInt, IsNumber } from 'class-validator';
 
 export class CreateDatosExpedienteDto {
+  @IsNotEmpty()
+  @IsString()
+  EXPEDIENTE: string;
 
-    @IsNumber()
-    @IsPositive()
-    Hoja: number; // Maps to Hoja INT NOT NULL DEFAULT 0
+  @IsNotEmpty()
+  @IsInt()
+  HOJA: number;
 
-    @IsNumber()
-    @IsPositive()
-    Orden: number; // Maps to Orden INT NOT NULL DEFAULT 0 CHECK (Orden >= 0)
+  @IsNotEmpty()
+  @IsInt()
+  ORDEN: number;
 
-    @IsString()
-    @MinLength(3)
-    @IsOptional()
-    Cultivo?: string; // Maps to Cultivo VARCHAR(100) DEFAULT NULL
+  @IsOptional()
+  @IsString()
+  CULTIVO?: string;
 
-    @IsNumber()
-    @IsPositive()
-    @IsOptional()
-    Poligono?: number; // Maps to Poligono INT DEFAULT NULL CHECK (Poligono IS NULL OR Poligono > 0)
+  @IsOptional()
+  @IsInt()
+  POLIGONO?: number;
 
-    @IsNumber()
-    @IsPositive()
-    @IsOptional()
-    Parcela?: number; // Maps to Parcela INT DEFAULT NULL CHECK (Parcela IS NULL OR Parcela > 0)
+  @IsOptional()
+  @IsInt()
+  PARCELA?: number;
 
-    @IsString()
-    @MinLength(5)
-    @IsOptional()
-    Recinto?: string; // Maps to Recinto VARCHAR(255) DEFAULT NULL
+  @IsOptional()
+  @IsString()
+  RECINTO?: string;
 
-    @IsNumber()
-    @IsPositive()
-    IdMateria: number; // Maps to IdMateria INT NOT NULL
+  @IsNotEmpty()
+  @IsInt()
+  ID_MATERIA: number;
 
-    @IsNumber()
-    @IsPositive()
-    Multiplicador: number; // Maps to Multiplicador DOUBLE NOT NULL DEFAULT 0 CHECK (Multiplicador >= 0)
+  @IsNotEmpty()
+  @IsNumber()
+  MULTIPLICADOR: number;
 
-    @IsNumber()
-    @IsPositive()
-    Minimo: number; // Maps to Minimo INT NOT NULL DEFAULT 0 CHECK (Minimo >= 0)
+  @IsNotEmpty()
+  @IsInt()
+  MINIMO: number;
 
-    @IsNumber()
-    @IsPositive()
-    Maximo: number; // Maps to Maximo INT NOT NULL DEFAULT 0
+  @IsNotEmpty()
+  @IsInt()
+  MAXIMO: number;
 
-    @IsNumber()
-    @IsPositive()
-    Cantidad: number; // Maps to Cantidad INT NOT NULL DEFAULT 0
+  @IsNotEmpty()
+  @IsInt()
+  CANTIDAD: number;
 
-    @IsNumber()
-    @IsPositive()
-    CantidadInicial: number; // Maps to CantidadInicial INT NOT NULL DEFAULT 0 CHECK (CantidadInicial >= 0)
+  @IsNotEmpty()
+  @IsInt()
+  CANTIDAD_I: number;
 
-    @IsDate()
-    Desde: Date; // Maps to Desde DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+  @IsNotEmpty()
+  @IsString()
+  DESDE: string;
 
-    @IsDate()
-    @IsOptional()
-    @ValidateIf((o: CreateDatosExpedienteDto) => o.Hasta == null || o.Hasta > o.Desde)
-    Hasta?: Date | null; // Maps to Hasta DATETIME DEFAULT NULL with CHECK (Hasta IS NULL OR Hasta > Desde)
+  @IsNotEmpty()
+  @IsString()
+  HASTA: string;
 
-    @IsNumber()
-    @IsPositive()
-    @IsOptional()
-    @ValidateIf((o: CreateDatosExpedienteDto) => o.Cuatrimestre == null || (o.Cuatrimestre >= 1 && o.Cuatrimestre <= 3))
-    Cuatrimestre?: number; // Maps to Cuatrimestre TINYINT DEFAULT NULL CHECK (Cuatrimestre IS NULL OR (Cuatrimestre BETWEEN 1 AND 3))
-
+  @IsOptional()
+  @IsInt()
+  CUATRI?: number;
 }

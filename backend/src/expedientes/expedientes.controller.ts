@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Patch, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { ExpedientesService } from './expedientes.service';
 import { CreateExpedienteDto } from './dto/create-expediente.dto';
 import { UpdateExpedienteDto } from './dto/update-expediente.dto';
@@ -17,22 +17,28 @@ export class ExpedientesController {
     return this.expedientesService.findAll();
   }
 
-  @Get(':id/:hoja')
-  findOne(@Param('id') id: string, @Param('hoja') hoja: number) {
-    return this.expedientesService.findOne(id, hoja);
+  @Get('id/:id')
+  findById(@Param('id') id: string) {
+    return this.expedientesService.findOne(+id);
   }
 
-  @Patch(':id/:hoja')
-  update(
-    @Param('id') id: string,
-    @Param('hoja') hoja: number,
-    @Body() updateExpedienteDto: UpdateExpedienteDto,
-  ) {
-    return this.expedientesService.update(id, hoja, updateExpedienteDto);
+  @Get('dni/:dni')
+  findByDni(@Param('dni') dni: string) {
+    return this.expedientesService.findByDni(dni);
   }
 
-  @Delete(':id/:hoja')
-  remove(@Param('id') id: string, @Param('hoja') hoja: number) {
-    return this.expedientesService.remove(id, hoja);
+  @Get('municipio/:idMunicipio')
+  findByMunicipio(@Param('idMunicipio') idMunicipio: number) {
+    return this.expedientesService.findByMunicipio(idMunicipio);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateExpedienteDto: UpdateExpedienteDto) {
+    return this.expedientesService.update(+id, updateExpedienteDto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.expedientesService.remove(+id);
   }
 }

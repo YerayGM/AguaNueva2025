@@ -1,15 +1,12 @@
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { DatosExpedientesService } from './datos-expedientes.service';
 import { DatosExpedientesController } from './datos-expedientes.controller';
-import { DatosExpediente } from './entities/datos-expediente.entity';
-import { TypeOrmModule } from '@nestjs/typeorm';
-
+import { DatosExpediente } from './entities/datos-expedientes.entity';
 
 @Module({
+  imports: [TypeOrmModule.forFeature([DatosExpediente])],
   controllers: [DatosExpedientesController],
   providers: [DatosExpedientesService],
-  imports: [
-    TypeOrmModule.forFeature([DatosExpediente]),
-  ],
 })
 export class DatosExpedientesModule {}

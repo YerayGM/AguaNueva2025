@@ -17,31 +17,18 @@ export class DatosExpedientesController {
     return this.datosExpedientesService.findAll();
   }
 
-  @Get(':idExpediente/:hoja/:orden')
-  findOne(
-    @Param('idExpediente') idExpediente: string,
-    @Param('hoja') hoja: number,
-    @Param('orden') orden: number,
-  ) {
-    return this.datosExpedientesService.findOne(idExpediente, hoja, orden);
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.datosExpedientesService.findOne(+id);
   }
 
-  @Patch(':idExpediente/:hoja/:orden')
-  update(
-    @Param('idExpediente') idExpediente: string,
-    @Param('hoja') hoja: number,
-    @Param('orden') orden: number,
-    @Body() updateDatosExpedienteDto: UpdateDatosExpedienteDto,
-  ) {
-    return this.datosExpedientesService.update(idExpediente, hoja, orden, updateDatosExpedienteDto);
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateDatosExpedienteDto: UpdateDatosExpedienteDto) {
+    return this.datosExpedientesService.update(+id, updateDatosExpedienteDto);
   }
 
-  @Delete(':idExpediente/:hoja/:orden')
-  remove(
-    @Param('idExpediente') idExpediente: string,
-    @Param('hoja') hoja: number,
-    @Param('orden') orden: number,
-  ) {
-    return this.datosExpedientesService.remove(idExpediente, hoja, orden);
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.datosExpedientesService.remove(+id);
   }
 }

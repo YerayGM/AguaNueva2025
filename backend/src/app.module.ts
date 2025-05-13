@@ -3,9 +3,10 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MunicipiosModule } from './municipios/municipios.module';
 import { ExpedientesModule } from './expedientes/expedientes.module';
-import { DatosPersonalesModule } from './datos-personales/datos-personales.module';
+import { DatosPersonalesModule } from './datos-per/datos-personales.module';
 import { DatosExpedientesModule } from './datos-expedientes/datos-expedientes.module';
 import { MateriasModule } from './materias/materias.module';
+import { ContadoresModule } from './contadores/contadores.module';
 
 
 @Module({
@@ -24,6 +25,7 @@ import { MateriasModule } from './materias/materias.module';
     ExpedientesModule,
     DatosPersonalesModule,
     DatosExpedientesModule,
-    MateriasModule,],
+    MateriasModule,
+    ContadoresModule,],
 })
 export class AppModule {}

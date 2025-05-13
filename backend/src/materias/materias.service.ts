@@ -6,38 +6,34 @@ import { CreateMateriaDto } from './dto/create-materia.dto';
 import { UpdateMateriaDto } from './dto/update-materia.dto';
 
 @Injectable()
-export class MateriasService {
+export class MateriaService {
   constructor(
     @InjectRepository(Materia)
     private readonly materiaRepository: Repository<Materia>,
   ) {}
 
-  async create(createMateriaDto: CreateMateriaDto): Promise<Materia> {
+  create(createMateriaDto: CreateMateriaDto) {
     const materia = this.materiaRepository.create(createMateriaDto);
     return this.materiaRepository.save(materia);
   }
 
-  async findAll(): Promise<Materia[]> {
+  findAll() {
     return this.materiaRepository.find();
   }
 
-  async findOne(id: number): Promise<Materia> {
-    const materia = await this.materiaRepository.findOneBy({ id });
-    if (!materia) {
-      throw new Error(`Materia with ID ${id} not found`);
-    }
-    return materia;
+  findByTipo(tipo: string) {
+    return this.materiaRepository.find({ where: { TIPO: tipo } });
   }
 
-  async update(id: number, updateMateriaDto: UpdateMateriaDto): Promise<Materia> {
-    await this.materiaRepository.update(id, updateMateriaDto);
-    return this.findOne(id);
+  findByNombre(nombre: string) {
+    return this.materiaRepository.find({ where: { MATERIA: nombre } });
   }
 
-  async remove(id: number): Promise<void> {
-    const result = await this.materiaRepository.delete(id);
-    if (result.affected === 0) {
-      throw new Error(`Materia with ID ${id} not found`);
-    }
+  update(id: number, updateMateriaDto: UpdateMateriaDto) {
+    return this.materiaRepository.update(id, updateMateriaDto);
+  }
+
+  remove(id: number) {
+    return this.materiaRepository.delete(id);
   }
 }
