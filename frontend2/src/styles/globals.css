@@ -1,0 +1,164 @@
+@import "tailwindcss";
+
+:root {
+  /* Colores primarios */
+  --color-verdeCabildo: #017a9a;
+  --color-verdeCabildo-hover: #236c3f;
+  
+  /* Colores de fondo */
+  --bg-color: #f8fafc;
+  --bg-gradient-from: #eff6ff; /* blue-50 */
+  --bg-gradient-to: #ffffff;
+  
+  /* Colores de texto */
+  --text-color: #1e293b;
+  --text-secondary: #64748b; /* gray-500 */
+  --text-muted: #94a3b8; /* gray-400 */
+  
+  /* Colores de elementos UI */
+  --card-bg: #ffffff;
+  --card-border: #e2e8f0;
+  --header-bg: rgba(255, 255, 255, 0.8);
+  --footer-bg: #1e293b; /* gray-800 */
+  --footer-text: #f8fafc;
+  --footer-text-muted: #94a3b8;
+  --footer-border: #334155;
+  
+  /* Colores especiales */
+  --hero-gradient-from: var(--color-verdeCabildo);
+  --hero-gradient-to: #3b82f6; /* blue-500 */
+  --info-section-bg-from: #eff6ff; /* blue-50 */
+  --info-section-bg-to: #f0fdf4; /* green-50 */
+  --info-border: #dbeafe; /* blue-100 */
+  --help-section-bg: #eff6ff; /* blue-50 */
+  
+  /* Efectos */
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  --glow-color-from: var(--color-verdeCabildo);
+  --glow-color-via: #60a5fa; /* blue-400 */
+  --glow-color-to: var(--color-verdeCabildo);
+}
+
+[data-theme="dark"] {
+  /* Colores primarios */
+  --color-verdeCabildo: #0d9dbe;
+  --color-verdeCabildo-hover: #3d8463;
+  
+  /* Colores de fondo */
+  --bg-color: #0f172a; /* gray-900 */
+  --bg-gradient-from: #1e293b; /* gray-800 */
+  --bg-gradient-to: #0f172a; /* gray-900 */
+  
+  /* Colores de texto */
+  --text-color: #f1f5f9; /* gray-100 */
+  --text-secondary: #cbd5e1; /* gray-300 */
+  --text-muted: #94a3b8; /* gray-400 */
+  
+  /* Colores de elementos UI */
+  --card-bg: #1e293b; /* gray-800 */
+  --card-border: #334155; /* gray-700 */
+  --header-bg: rgba(15, 23, 42, 0.8); /* gray-900 with opacity */
+  --footer-bg: #0f172a; /* darker gray-900 */
+  --footer-text: #f1f5f9;
+  --footer-text-muted: #64748b;
+  --footer-border: #1e293b;
+  
+  /* Colores especiales */
+  --hero-gradient-from: #0d9dbe;
+  --hero-gradient-to: #3b82f6;
+  --info-section-bg-from: #1e293b; /* gray-800 */
+  --info-section-bg-to: #0f172a; /* gray-900 */
+  --info-border: #334155; /* gray-700 */
+  --help-section-bg: #1e293b; /* gray-800 */
+  
+  /* Efectos */
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --glow-color-from: #0d9dbe;
+  --glow-color-via: #38bdf8; /* blue-400 darker */
+  --glow-color-to: #0d9dbe;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Clases personalizadas */
+.text-verdeCabildo {
+  color: var(--color-verdeCabildo) !important;
+}
+
+.bg-verdeCabildo {
+  background-color: var(--color-verdeCabildo) !important;
+}
+
+.hover\:bg-verdeCabildo:hover {
+  background-color: var(--color-verdeCabildo-hover) !important;
+}
+
+/* Componentes específicos */
+.dark-header {
+  background-color: var(--header-bg);
+  border-color: var(--card-border);
+}
+
+/* Sobrescribir clases de Tailwind con variables CSS */
+.bg-gradient-to-b.from-blue-50.to-white {
+  background-image: linear-gradient(to bottom, var(--bg-gradient-from), var(--bg-gradient-to)) !important;
+}
+
+.text-gray-600 {
+  color: var(--text-secondary) !important;
+}
+
+.text-gray-700, .text-gray-500, .text-gray-400 {
+  color: var(--text-muted) !important;
+}
+
+.bg-white {
+  background-color: var(--card-bg) !important;
+}
+
+.border-gray-100, .border-blue-100, .border-blue-50 {
+  border-color: var(--card-border) !important;
+}
+
+.bg-gradient-to-r.from-verdeCabildo.to-blue-500 {
+  background-image: linear-gradient(to right, var(--hero-gradient-from), var(--hero-gradient-to)) !important;
+}
+
+.bg-gradient-to-br.from-blue-50.to-green-50 {
+  background-image: linear-gradient(to bottom right, var(--info-section-bg-from), var(--info-section-bg-to)) !important;
+}
+
+.bg-blue-50 {
+  background-color: var(--help-section-bg) !important;
+}
+
+.bg-gray-800 {
+  background-color: var(--footer-bg) !important;
+}
+
+.text-white {
+  color: var(--footer-text) !important;
+}
+
+.text-gray-300, .text-gray-400 {
+  color: var(--footer-text-muted) !important;
+}
+
+.border-gray-700 {
+  border-color: var(--footer-border) !important;
+}
+
+/* Ajustes de sombras */
+.shadow-xl, .shadow-2xl, .shadow-md, .shadow-lg {
+  box-shadow: 0 10px 25px -5px var(--shadow-color), 0 8px 10px -6px var(--shadow-color) !important;
+}
+
+/* Resplandor en hover para tarjetas */
+.from-verdeCabildo.via-blue-400.to-verdeCabildo {
+  background-image: linear-gradient(to right, var(--glow-color-from), var(--glow-color-via), var(--glow-color-to)) !important;
+}
