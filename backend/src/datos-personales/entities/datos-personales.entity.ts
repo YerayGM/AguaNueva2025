@@ -1,13 +1,12 @@
-import { Entity, Column, PrimaryColumn, ManyToOne, JoinColumn, Index } from 'typeorm';
+import { Entity, PrimaryColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { Municipio } from '../../municipios/entities/municipio.entity';
 
 @Entity('DatosPersonales')
-@Index('idx_nombre_apellidos', ['nombre', 'apellidos'])
 export class DatosPersonales {
   @PrimaryColumn({ type: 'varchar', length: 12 })
   dni: string;
 
-  @Column({ type: 'varchar', length: 50, nullable: true })
+  @Column({ type: 'varchar', length: 50 })
   nombre: string;
 
   @Column({ type: 'varchar', length: 100 })
@@ -19,8 +18,11 @@ export class DatosPersonales {
   @Column({ type: 'varchar', length: 50, nullable: true })
   localidad: string;
 
-  @ManyToOne(() => Municipio)
-  @JoinColumn({ name: 'IdMunicipio' })
+  @Column({ type: 'char', length: 5 })
+  codigoPostal: string;
+
+  @ManyToOne(() => Municipio, { onDelete: 'RESTRICT', onUpdate: 'CASCADE' })
+  @JoinColumn({ name: 'idMunicipio' })
   municipio: Municipio;
 
   @Column({ type: 'varchar', length: 20, nullable: true })
@@ -29,36 +31,10 @@ export class DatosPersonales {
   @Column({ type: 'varchar', length: 100 })
   email: string;
 
-  @Column({ type: 'enum', enum: ['si', 'no'], default: 'no' })
+  @Column({
+    type: 'enum',
+    enum: ['si', 'no'],
+    default: 'no',
+  })
   actividadAgropecuaria: 'si' | 'no';
-
-  @Column({ type: 'boolean', nullable: true })
-  personaFiscal: boolean | null;
-
-  @Column({ type: 'boolean', nullable: true })
-  personaJuridica: boolean | null;
-
-  @Column({ type: 'boolean', nullable: true })
-  agricultorProfesional: boolean | null;
-
-  @Column({ type: 'boolean', nullable: true })
-  agricultorlTiempoParcial: boolean | null;
-
-  @Column({ type: 'boolean', nullable: true })
-  trabajadorAsalariado: boolean | null;
-
-  @Column({ type: 'smallint', nullable: true })
-  numeroasAlariados: number | null;
-
-  @Column({ type: 'boolean', nullable: true })
-  discapacidadAgricultorProfesional: boolean | null;
-
-  @Column({ type: 'smallint', nullable: true })
-  numeroAgriculresProfesionales: number | null;
-
-  @Column({ type: 'smallint', nullable: true })
-  numeroTrabajadoresAsalariados: number | null;
-
-  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
-  fechaCreacion: Date;
 }

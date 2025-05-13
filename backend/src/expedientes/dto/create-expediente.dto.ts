@@ -1,65 +1,56 @@
-import { IsString, IsInt, IsOptional, IsDate, MaxLength, Matches, Min } from 'class-validator';
+import { IsString, IsDateString, IsInt, IsOptional, Length, Min } from 'class-validator';
 
 export class CreateExpedienteDto {
-    @IsString()
-    @Matches(/^[A-Z]{3}[0-9]{7}$/, {
-        message: 'IdExpediente must match the format: 3 letters followed by 7 digits',
-    })
-    IdExpediente: string;
+  @IsString()
+  @Length(10, 10)
+  idExpediente: string;
 
-    @IsInt()
-    Hoja: number;
+  @IsInt()
+  @Min(0)
+  hoja: number;
 
-    @IsString()
-    @Matches(/^[0-9A-Za-z]{12}$/, {
-        message: 'Dni must be exactly 12 alphanumeric characters',
-    })
-    Dni: string;
+  @IsString()
+  @Length(12, 12)
+  dni: string;
 
-    @IsDate()
-    @IsOptional()
-    Fecha?: Date;
+  @IsDateString()
+  fecha: string;
 
-    @IsString()
-    @MaxLength(50)
-    Lugar: string;
+  @IsString()
+  @Length(0, 50)
+  lugar: string;
 
-    @IsString()
-    @MaxLength(50)
-    Localidad: string;
+  @IsString()
+  @Length(0, 50)
+  localidad: string;
 
-    @IsInt()
-    IdMunicipio: number;
+  @IsInt()
+  idMunicipio: number;
 
-    @IsString()
-    @MaxLength(50)
-    ContadorNombre: string;
+  @IsString()
+  @Length(0, 50)
+  contadorNombre: string;
 
-    @IsString()
-    @MaxLength(30)
-    ContadorPoliza: string;
+  @IsString()
+  @Length(0, 30)
+  contadorPoliza: string;
 
-    @IsString()
-    @IsOptional()
-    Observaciones?: string;
+  @IsOptional()
+  @IsString()
+  observaciones?: string;
 
-    @IsString()
-    @MaxLength(50)
-    Tecnico: string;
+  @IsString()
+  @Length(0, 50)
+  tecnico: string;
 
-    @IsDate()
-    @IsOptional()
-    FechaInforme?: Date;
+  @IsDateString()
+  fechaInforme: string;
 
-    @IsInt()
-    @Min(0)
-    Dias: number;
+  @IsOptional()
+  @IsString()
+  observacionesTecnico?: string;
 
-    @IsString()
-    @IsOptional()
-    ObservacionesTecnico?: string;
-
-    @IsString()
-    @IsOptional()
-    TextoInforme?: string;
+  @IsOptional()
+  @IsString()
+  textoInforme?: string;
 }

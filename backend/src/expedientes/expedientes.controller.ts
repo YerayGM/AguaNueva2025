@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, Delete } from '@nestjs/common';
 import { ExpedientesService } from './expedientes.service';
 import { CreateExpedienteDto } from './dto/create-expediente.dto';
 import { UpdateExpedienteDto } from './dto/update-expediente.dto';
@@ -17,18 +17,22 @@ export class ExpedientesController {
     return this.expedientesService.findAll();
   }
 
-  @Get(':idExpediente/:hoja')
-  findOne(@Param('idExpediente') idExpediente: string, @Param('hoja') hoja: number) {
-    return this.expedientesService.findOne(idExpediente, hoja);
+  @Get(':id/:hoja')
+  findOne(@Param('id') id: string, @Param('hoja') hoja: number) {
+    return this.expedientesService.findOne(id, hoja);
   }
 
-  @Patch(':idExpediente/:hoja')
-  update(@Param('idExpediente') idExpediente: string, @Param('hoja') hoja: number, @Body() updateExpedienteDto: UpdateExpedienteDto) {
-    return this.expedientesService.update(idExpediente, hoja, updateExpedienteDto);
+  @Patch(':id/:hoja')
+  update(
+    @Param('id') id: string,
+    @Param('hoja') hoja: number,
+    @Body() updateExpedienteDto: UpdateExpedienteDto,
+  ) {
+    return this.expedientesService.update(id, hoja, updateExpedienteDto);
   }
 
-  @Delete(':idExpediente/:hoja')
-  remove(@Param('idExpediente') idExpediente: string, @Param('hoja') hoja: number) {
-    return this.expedientesService.remove(idExpediente, hoja);
+  @Delete(':id/:hoja')
+  remove(@Param('id') id: string, @Param('hoja') hoja: number) {
+    return this.expedientesService.remove(id, hoja);
   }
 }

@@ -1,24 +1,26 @@
-import { IsString, IsInt, Min } from 'class-validator';
+import { IsString, IsNumber, Min, Length } from 'class-validator';
 
 export class CreateMateriaDto {
-    @IsInt()
-    orden: number;
+  @IsNumber()
+  @Min(0)
+  orden: number;
 
-    @IsString()
-    tipo: string;
+  @IsString()
+  @Length(2, 50)
+  tipo: string;
 
-    @IsString()
-    materia: string;
+  @IsString()
+  @Length(2, 30)
+  materia: string;
 
-    @IsInt()
-    @Min(0)
-    multiplicador: number;
+  @IsNumber()
+  @Min(0)
+  multiplicador: number;
 
-    @IsInt()
-    @Min(0)
-    minimo: number;
+  @IsNumber()
+  @Min(0)
+  minimo: number;
 
-    @IsInt()
-    @Min(0)
-    maximo: number;
+  @IsNumber()
+  maximo: number;
 }
