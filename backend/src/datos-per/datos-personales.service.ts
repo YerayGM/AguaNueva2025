@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { DatosPer } from './entities/datos-per.entity';
@@ -15,40 +15,92 @@ export class DatosPersonalesService {
     private readonly municipiosRepository: Repository<Municipio>,
   ) {}
 
-  create(createDatosPerDto: CreateDatosPerDto) {
+  async create(createDatosPerDto: CreateDatosPerDto): Promise<DatosPer> {
     const datosPer = this.datosPerRepository.create(createDatosPerDto);
-    return this.datosPerRepository.save(datosPer);
+    return await this.datosPerRepository.save(datosPer);
   }
 
-  findAll() {
-    return this.datosPerRepository.find();
+  async findAll(): Promise<DatosPer[]> {
+    return await this.datosPerRepository.find();
   }
 
-  findOne(dni: string) {
-    return this.datosPerRepository.findOne({ where: { DNI: dni } });
+  async findOne(dni: string): Promise<DatosPer> {
+    const datosPer = await this.datosPerRepository.findOne({ 
+      where: { DNI: dni } 
+    });
+    
+    if (!datosPer) {
+      throw new NotFoundException(`No se encontró ningún registro con DNI ${dni}`);
+    }
+    
+    return datosPer;
   }
 
-  findByNombre(nombre: string, apellidos?: string) {
-    const where: Partial<Pick<DatosPer, 'NOMBREC' | 'APELLIDOS'>> = { NOMBREC: nombre };
+  async findByNombre(nombre?: string, apellidos?: string): Promise<DatosPer[]> {
+    if (!nombre && !apellidos) {
+      throw new Error('Debe proporcionar al menos un criterio de búsqueda: nombre o apellidos');
+    }
+    
+    const where: Partial<Pick<DatosPer, 'NOMBREC' | 'APELLIDOS'>> = {};
+    
+    if (nombre) {
+      where.NOMBREC = nombre;
+    }
+    
     if (apellidos) {
       where.APELLIDOS = apellidos;
     }
-    return this.datosPerRepository.find({ where });
-  }
-
-  async findByMunicipio(idMunicipio: number) {
-    const municipio = await this.municipiosRepository.findOne({ where: { ID_MUN: idMunicipio } });
-    if (!municipio) {
-      throw new Error(`No se encontró el municipio con ID ${idMunicipio}`);
+    
+    const datos = await this.datosPerRepository.find({ where });
+    
+    if (datos.length === 0) {
+      let criterio = '';
+      if (nombre && apellidos) {
+        criterio = `nombre "${nombre}" y apellidos "${apellidos}"`;
+      } else if (nombre) {
+        criterio = `nombre "${nombre}"`;
+      } else {
+        criterio = `apellidos "${apellidos}"`;
+      }
+      throw new NotFoundException(`No se encontraron registros con ${criterio}`);
     }
-    return this.datosPerRepository.find({ where: { LOCALIDAD: municipio.MUNICIPIO } });
+    
+    return datos;
   }
 
-  update(dni: string, updateDatosPerDto: UpdateDatosPerDto) {
-    return this.datosPerRepository.update(dni, updateDatosPerDto);
+  async findByMunicipio(idMunicipio: number): Promise<DatosPer[]> {
+    const municipio = await this.municipiosRepository.findOne({ 
+      where: { ID_MUN: idMunicipio } 
+    });
+    
+    if (!municipio) {
+      throw new NotFoundException(`No se encontró el municipio con ID ${idMunicipio}`);
+    }
+    
+    const datos = await this.datosPerRepository.find({ 
+      where: { LOCALIDAD: municipio.MUNICIPIO } 
+    });
+    
+    if (datos.length === 0) {
+      throw new NotFoundException(`No se encontraron registros en el municipio "${municipio.MUNICIPIO}"`);
+    }
+    
+    return datos;
   }
 
-  remove(dni: string) {
-    return this.datosPerRepository.delete(dni);
+  async update(dni: string, updateDatosPerDto: UpdateDatosPerDto): Promise<void> {
+    const resultado = await this.datosPerRepository.update(dni, updateDatosPerDto);
+    
+    if (resultado.affected === 0) {
+      throw new NotFoundException(`No se encontró ningún registro con DNI ${dni} para actualizar`);
+    }
+  }
+
+  async remove(dni: string): Promise<void> {
+    const resultado = await this.datosPerRepository.delete(dni);
+    
+    if (resultado.affected === 0) {
+      throw new NotFoundException(`No se encontró ningún registro con DNI ${dni} para eliminar`);
+    }
   }
 }

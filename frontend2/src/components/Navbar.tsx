@@ -1,14 +1,14 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
+import '../styles/globals.css';
 
 const Navbar: React.FC = () => {
   return (
     <nav className="navbar">
-      <ul>
-        <li><Link to="/datos-personales">Datos Personales</Link></li>
-        <li><Link to="/expedientes">Expedientes</Link></li>
-        <li><Link to="/materia">Materia</Link></li>
-        <li><Link to="/municipios">Municipios</Link></li>
+      <ul className="navbar-list">
+        <li><NavLink to="/datos-personales" className={({ isActive }) => isActive ? "active-link" : undefined}>Datos Personales</NavLink></li>
+        <li><NavLink to="/expedientes" className={({ isActive }) => isActive ? "active-link" : undefined}>Expedientes</NavLink></li>
+        <li><NavLink to="/expedientes/new" className={({ isActive }) => isActive ? "active-link" : undefined}>Nuevo Expediente</NavLink></li>
       </ul>
     </nav>
   );
