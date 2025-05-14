@@ -26,7 +26,7 @@ export class ExpedientesController {
 
   @Get(':expediente')
   @ApiOperation({ summary: 'Buscar un expediente por ID' })
-  @ApiParam({ name: 'id', description: 'ID del expediente' })
+  @ApiParam({ name: 'expediente', description: 'Expediente de la persona' })
   @ApiResponse({ status: 200, description: 'Expediente encontrado', type: Expediente })
   @ApiResponse({ status: 404, description: 'Expediente no encontrado' })
   findOne(@Param('expediente') expediente: string) {
@@ -68,7 +68,7 @@ export class ExpedientesController {
 
   @Patch(':expediente')
   @ApiOperation({ summary: 'Actualizar un expediente por codigo de expediente' })
-  @ApiParam({ name: 'id', description: 'Codigo expediente del expediente a actualizar' })
+  @ApiParam({ name: 'expediente', description: 'Expediente del expediente a actualizar' })
   @ApiResponse({ status: 200, description: 'Expediente actualizado correctamente' })
   @ApiResponse({ status: 404, description: 'Expediente no encontrado' })
   update(
@@ -80,7 +80,7 @@ export class ExpedientesController {
 
   @Delete(':expediente')
   @ApiOperation({ summary: 'Eliminar un expediente por codigo deexpediente' })
-  @ApiParam({ name: 'expedienteCodigo', description: 'Codigo de expediente del expediente a eliminar' })
+  @ApiParam({ name: 'expediente', description: 'Expediente del expediente a eliminar' })
   @ApiResponse({ status: 200, description: 'Expediente eliminado correctamente' })
   @ApiResponse({ status: 404, description: 'Expediente no encontrado' })
   remove(@Param('expediente') expediente: string) {
