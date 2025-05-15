@@ -1,27 +1,41 @@
 import React, { useEffect, useState } from 'react';
+import type { DatosPersonales } from '../../types/DatosPersonales';
 import { Link } from 'react-router-dom';
 import { getDatosPersonales } from '../../services/datosPersonales';
-import { DatosPersonales } from '../../types/DatosPersonales';
+import { getMunicipios } from '../../services/municipios';
+import { Municipio } from '../../types/Municipios';
 import Loader from '../../components/Loader';
+import Pagination from '../../components/Pagination';
 import '@flaticon/flaticon-uicons/css/all/all.css';
 
 const DatosPersonalesList = () => {
-  const [datosPersonales, setDatosPersonales] = useState([]);
+  const [datosPersonales, setDatosPersonales] = useState<DatosPersonales[]>([]);
+  const [municipios, setMunicipios] = useState<Municipio[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
+  const [sortConfig, setSortConfig] = useState<{ key: keyof DatosPersonales | null; direction: 'ascending' | 'descending' }>({ key: null, direction: 'ascending' });
+  
+  // Paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const data = await getDatosPersonales();
-        setDatosPersonales(data);
+        // Cargar datos personales y municipios en paralelo
+        const [datosResult, municipiosResult] = await Promise.all([
+          getDatosPersonales(),
+          getMunicipios()
+        ]);
+        
+        setDatosPersonales(datosResult);
+        setMunicipios(municipiosResult);
         setError(null);
       } catch (err) {
-        console.error('Error fetching datos personales:', err);
-        setError('Error al cargar los datos personales');
+        console.error('Error fetching data:', err);
+        setError('Error al cargar los datos');
       } finally {
         setLoading(false);
       }
@@ -30,8 +44,14 @@ const DatosPersonalesList = () => {
     fetchData();
   }, []);
 
-  const handleSort = (key) => {
-    let direction = 'ascending';
+  // Función para obtener el nombre del municipio por ID
+  const getMunicipioNombre = (id: number): string => {
+    const municipio = municipios.find(m => m.ID_MUN === id);
+    return municipio ? municipio.MUNICIPIO : 'Desconocido';
+  };
+
+  const handleSort = (key: keyof DatosPersonales) => {
+    let direction: 'ascending' | 'descending' = 'ascending';
     if (sortConfig.key === key && sortConfig.direction === 'ascending') {
       direction = 'descending';
     }
@@ -42,10 +62,14 @@ const DatosPersonalesList = () => {
     if (!sortConfig.key) return datosPersonales;
     
     return [...datosPersonales].sort((a, b) => {
-      if (a[sortConfig.key] < b[sortConfig.key]) {
+      if (sortConfig.key === null) return 0;
+      const aValue = a[sortConfig.key];
+      const bValue = b[sortConfig.key];
+      if (aValue === undefined || bValue === undefined) return 0;
+      if (aValue < bValue) {
         return sortConfig.direction === 'ascending' ? -1 : 1;
       }
-      if (a[sortConfig.key] > b[sortConfig.key]) {
+      if (aValue > bValue) {
         return sortConfig.direction === 'ascending' ? 1 : -1;
       }
       return 0;
@@ -53,54 +77,81 @@ const DatosPersonalesList = () => {
   }, [datosPersonales, sortConfig]);
 
   const filteredData = React.useMemo(() => {
-    return sortedData.filter(dato => 
-      dato.DNI.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (dato.NOMBREC && dato.NOMBREC.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      dato.APELLIDOS.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (dato.LOCALIDAD && dato.LOCALIDAD.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
-  }, [sortedData, searchTerm]);
+    return sortedData.filter(dato => {
+      const municipioNombre = getMunicipioNombre(dato.ID_MUN).toLowerCase();
+      
+      return dato.DNI.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (dato.NOMBREC?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        dato.APELLIDOS.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        municipioNombre.includes(searchTerm.toLowerCase());
+    });
+  }, [sortedData, searchTerm, municipios]);
+
+  // Calcular datos paginados
+  const paginatedData = React.useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredData.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredData, currentPage, itemsPerPage]);
+
+  // Calcular total de páginas
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+
+  // Manejar cambio de página
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // Scroll al inicio de la tabla
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <Loader />
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-primary to-blue-500 bg-opacity-20">
+        <div className="backdrop-blur-md bg-white bg-opacity-80 p-8 rounded-xl shadow-xl animate-fade-in-down">
+          <Loader />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-gray-50 min-h-screen">
-      <div className="container mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-color)' }}>
+      <div className="container mx-auto px-4 py-8 animate-fade-in">
+        <div className="rounded-lg shadow-md overflow-hidden transition-all duration-300" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}>
           {/* Header section */}
-          <div className="p-6 border-b border-gray-200">
+          <div className="p-6 border-b" style={{ borderColor: 'var(--card-border)' }}>
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
-              <h1 className="text-2xl font-bold text-green-700 flex items-center">
-                <i className="fi fi-rr-users mr-2"></i> Datos Personales
+              <h1 className="text-2xl font-bold text-primary flex items-center">
+                <i className="fi fi-rr-users mr-2"></i> 
+                <span className="bg-gradient-to-r from-primary to-blue-500 bg-clip-text text-transparent">
+                  Datos Personales
+                </span>
               </h1>
               <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full md:w-auto">
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="Buscar..."
-                    className="pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 w-full"
+                    placeholder="Buscar por DNI, nombre, apellidos o municipio..."
+                    className="pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary transition-all duration-300 w-full"
+                    style={{ borderColor: 'var(--card-border)' }}
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setCurrentPage(1); // Resetear a primera página al buscar
+                    }}
                   />
-                  <i className="fi fi-rr-search absolute left-3 top-2.5 text-gray-400"></i>
+                  <i className="fi fi-rr-search absolute left-3 top-2.5" style={{ color: 'var(--text-muted)' }}></i>
                 </div>
                 <Link 
                   to="/datos-personales/new" 
-                  className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition duration-200 flex items-center justify-center"
+                  className="bg-primary hover:bg-primary-hover text-white font-medium py-2 px-4 rounded-lg transition duration-300 flex items-center justify-center group"
                 >
-                  <i className="fi fi-rr-user-add mr-2"></i> Nuevo Registro
+                  <i className="fi fi-rr-user-add mr-2 group-hover:scale-110 transition-all duration-300"></i> Nuevo Registro
                 </Link>
               </div>
             </div>
             
             {error && (
-              <div className="mt-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-md text-red-700">
+              <div className="mt-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-md text-red-700 animate-fade-in">
                 <div className="flex items-center">
                   <i className="fi fi-rr-exclamation text-red-500 mr-2"></i>
                   <p>{error}</p>
@@ -112,22 +163,23 @@ const DatosPersonalesList = () => {
           {/* Content section */}
           <div className="p-6">
             {datosPersonales.length === 0 ? (
-              <div className="text-center text-gray-500 p-8 bg-gray-50 rounded-lg border border-gray-200">
-                <i className="fi fi-rr-info-circle text-4xl mb-3 text-gray-400"></i>
+              <div className="text-center p-8 rounded-lg border animate-fade-in-down" style={{ backgroundColor: 'var(--info-section-bg-from)', borderColor: 'var(--info-border)', color: 'var(--text-secondary)' }}>
+                <i className="fi fi-rr-info-circle text-4xl mb-3" style={{ color: 'var(--text-muted)' }}></i>
                 <p className="text-lg">No hay datos personales disponibles.</p>
               </div>
             ) : filteredData.length === 0 ? (
-              <div className="text-center text-gray-500 p-8 bg-gray-50 rounded-lg border border-gray-200">
-                <i className="fi fi-rr-search-minus text-4xl mb-3 text-gray-400"></i>
+              <div className="text-center p-8 rounded-lg border animate-fade-in-down" style={{ backgroundColor: 'var(--info-section-bg-from)', borderColor: 'var(--info-border)', color: 'var(--text-secondary)' }}>
+                <i className="fi fi-rr-search-minus text-4xl mb-3" style={{ color: 'var(--text-muted)' }}></i>
                 <p className="text-lg">No se encontraron resultados para "{searchTerm}"</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+              <div className="overflow-x-auto rounded-lg shadow-inner animate-fade-in">
+                <table className="min-w-full divide-y" style={{ borderColor: 'var(--card-border)', divideColor: 'var(--card-border)' }}>
+                  <thead style={{ backgroundColor: 'var(--info-section-bg-from)' }}>
                     <tr>
                       <th 
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                        className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer transition duration-300"
+                        style={{ color: 'var(--text-secondary)' }}
                         onClick={() => handleSort('DNI')}
                       >
                         <div className="flex items-center">
@@ -138,7 +190,8 @@ const DatosPersonalesList = () => {
                         </div>
                       </th>
                       <th 
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                        className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer transition duration-300"
+                        style={{ color: 'var(--text-secondary)' }}
                         onClick={() => handleSort('NOMBREC')}
                       >
                         <div className="flex items-center">
@@ -149,7 +202,8 @@ const DatosPersonalesList = () => {
                         </div>
                       </th>
                       <th 
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                        className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer transition duration-300"
+                        style={{ color: 'var(--text-secondary)' }}
                         onClick={() => handleSort('APELLIDOS')}
                       >
                         <div className="flex items-center">
@@ -160,57 +214,59 @@ const DatosPersonalesList = () => {
                         </div>
                       </th>
                       <th 
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                        onClick={() => handleSort('LOCALIDAD')}
+                        className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer transition duration-300"
+                        style={{ color: 'var(--text-secondary)' }}
+                        onClick={() => handleSort('ID_MUN')}
                       >
                         <div className="flex items-center">
-                          Localidad
-                          {sortConfig.key === 'LOCALIDAD' && (
+                          Municipio
+                          {sortConfig.key === 'ID_MUN' && (
                             <i className={`fi fi-rr-${sortConfig.direction === 'ascending' ? 'angle-small-up' : 'angle-small-down'} ml-1`}></i>
                           )}
                         </div>
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th 
+                        className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                        style={{ color: 'var(--text-secondary)' }}
+                      >
                         Acciones
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredData.map((dato) => (
-                      <tr key={dato.DNI} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <tbody className="divide-y" style={{ backgroundColor: 'var(--card-bg)', divideColor: 'var(--card-border)' }}>
+                    {paginatedData.map((dato) => (
+                      <tr key={dato.DNI} className="transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium" style={{ color: 'var(--text-color)' }}>
                           <div className="flex items-center">
-                            <i className="fi fi-rr-id-badge text-gray-500 mr-2"></i>
+                            <i className="fi fi-rr-id-badge mr-2" style={{ color: 'var(--text-muted)' }}></i>
                             {dato.DNI}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm" style={{ color: 'var(--text-color)' }}>
                           {dato.NOMBREC || '-'}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm" style={{ color: 'var(--text-color)' }}>
                           {dato.APELLIDOS}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                          {dato.LOCALIDAD ? (
-                            <div className="flex items-center">
-                              <i className="fi fi-rr-marker text-gray-500 mr-2"></i>
-                              {dato.LOCALIDAD}
-                            </div>
-                          ) : '-'}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm" style={{ color: 'var(--text-color)' }}>
+                          <div className="flex items-center">
+                            <i className="fi fi-rr-building mr-2" style={{ color: 'var(--text-muted)' }}></i>
+                            {getMunicipioNombre(dato.ID_MUN)}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex space-x-4">
                             <Link 
                               to={`/datos-personales/${dato.DNI}`}
-                              className="text-blue-600 hover:text-blue-800 flex items-center transition-colors"
+                              className="text-primary hover:text-primary-hover flex items-center transition-colors duration-300 group"
                             >
-                              <i className="fi fi-rr-eye mr-1"></i> Ver
+                              <i className="fi fi-rr-eye mr-1 group-hover:scale-110 transition-all duration-300"></i> Ver
                             </Link>
                             <Link 
                               to={`/datos-personales/edit/${dato.DNI}`}
-                              className="text-green-600 hover:text-green-800 flex items-center transition-colors"
+                              className="text-accent hover:text-accent-hover flex items-center transition-colors duration-300 group"
                             >
-                              <i className="fi fi-rr-edit mr-1"></i> Editar
+                              <i className="fi fi-rr-edit mr-1 group-hover:scale-110 transition-all duration-300"></i> Editar
                             </Link>
                           </div>
                         </td>
@@ -220,13 +276,25 @@ const DatosPersonalesList = () => {
                 </table>
               </div>
             )}
+            
+            {/* Paginación */}
+            {filteredData.length > 0 && (
+              <Pagination 
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            )}
           </div>
           
-          {/* Footer with pagination could go here */}
+          {/* Footer */}
           {filteredData.length > 0 && (
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 text-sm text-gray-500">
-              Mostrando {filteredData.length} de {datosPersonales.length} registros
+          <div className="px-6 py-4 border-t text-sm" style={{ backgroundColor: 'var(--info-section-bg-from)', borderColor: 'var(--card-border)', color: 'var(--text-secondary)' }}>
+            <div className="flex items-center">
+              <i className="fi fi-rr-list-check mr-2"></i>
+              Mostrando {paginatedData.length} de {filteredData.length} registros (página {currentPage} de {totalPages})
             </div>
+          </div>
           )}
         </div>
       </div>

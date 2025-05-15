@@ -1,75 +1,79 @@
-import React, { ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import React, { ButtonHTMLAttributes, memo } from 'react';
 
-interface ButtonProps {
-  children: ReactNode;
-  variant?: 'primary' | 'secondary' | 'outline' | 'text';
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info';
   size?: 'sm' | 'md' | 'lg';
+  isLoading?: boolean;
   icon?: string;
-  className?: string;
-  onClick?: () => void;
-  to?: string;
-  type?: 'button' | 'submit' | 'reset';
-  disabled?: boolean;
+  iconPosition?: 'left' | 'right';
+  fullWidth?: boolean;
 }
 
 const Button: React.FC<ButtonProps> = ({
   children,
   variant = 'primary',
   size = 'md',
+  isLoading = false,
   icon,
+  iconPosition = 'left',
+  fullWidth = false,
   className = '',
-  onClick,
-  to,
-  type = 'button',
-  disabled = false
+  disabled,
+  ...props
 }) => {
   // Estilos base
-  const baseStyles = 'inline-flex items-center justify-center font-medium transition-all duration-200 rounded-lg focus:outline-none';
+  const baseClasses = 'font-medium rounded-lg transition-colors duration-300 flex items-center justify-center';
   
   // Variantes
-  const variantStyles = {
-    primary: 'bg-verdeCabildo dark:bg-blue-600 text-white hover:bg-verdeCabildo-hover dark:hover:bg-blue-700 shadow-md hover:shadow-lg',
-    secondary: 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600',
-    outline: 'border border-verdeCabildo dark:border-blue-500 text-verdeCabildo dark:text-blue-400 hover:bg-verdeCabildo hover:text-white dark:hover:bg-blue-600',
-    text: 'text-verdeCabildo dark:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+  const variantClasses = {
+    primary: 'bg-primary hover:bg-primary-hover text-white',
+    secondary: 'bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300',
+    danger: 'bg-red-500 hover:bg-red-600 text-white',
+    success: 'bg-green-500 hover:bg-green-600 text-white',
+    warning: 'bg-yellow-500 hover:bg-yellow-600 text-white',
+    info: 'bg-blue-500 hover:bg-blue-600 text-white'
   };
   
   // Tamaños
-  const sizeStyles = {
-    sm: 'text-xs px-3 py-1.5',
-    md: 'text-sm px-4 py-2',
-    lg: 'text-base px-6 py-3'
+  const sizeClasses = {
+    sm: 'px-3 py-1 text-sm',
+    md: 'px-4 py-2',
+    lg: 'px-6 py-3 text-lg'
   };
   
-  // Estilos para estado deshabilitado
-  const disabledStyles = disabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer';
+  // Estado deshabilitado o cargando
+  const stateClasses = (disabled || isLoading) ? 'opacity-70 cursor-not-allowed' : '';
   
-  // Combinación de estilos
-  const buttonStyles = `${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${disabledStyles} ${className}`;
+  // Ancho completo
+  const widthClasses = fullWidth ? 'w-full' : '';
   
-  // Si hay una ruta, renderizar como Link
-  if (to) {
-    return (
-      <Link to={to} className={buttonStyles}>
-        {icon && <i className={`${icon} mr-2`}></i>}
-        {children}
-      </Link>
-    );
-  }
+  // Clases combinadas
+  const buttonClasses = `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${stateClasses} ${widthClasses} ${className}`;
   
-  // De lo contrario, renderizar como botón
   return (
-    <button
-      type={type}
-      className={buttonStyles}
-      onClick={onClick}
-      disabled={disabled}
+    <button 
+      className={buttonClasses}
+      disabled={disabled || isLoading}
+      {...props}
     >
-      {icon && <i className={`${icon} mr-2`}></i>}
-      {children}
+      {isLoading ? (
+        <>
+          <i className="fi fi-rr-spinner animate-spin mr-2"></i>
+          {children || 'Cargando...'}
+        </>
+      ) : (
+        <>
+          {icon && iconPosition === 'left' && (
+            <i className={`${icon} mr-2 group-hover:scale-110 transition-all duration-300`}></i>
+          )}
+          {children}
+          {icon && iconPosition === 'right' && (
+            <i className={`${icon} ml-2 group-hover:scale-110 transition-all duration-300`}></i>
+          )}
+        </>
+      )}
     </button>
   );
 };
 
-export default Button;
+export default memo(Button);

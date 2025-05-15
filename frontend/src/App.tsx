@@ -1,31 +1,33 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import Routes from './router';
 import Header from './components/Header';
 import Footer from './components/Footer';
+import ThemeToggleButton from './components/ThemeToggleButton';
 import ErrorBoundary from './components/ErrorBoundary';
+import { ThemeProvider } from './context/ThemeContext';
 import { initBugfender } from './lib/bugfender';
 import './styles/globals.css';
 import '@flaticon/flaticon-uicons/css/all/all.css';
 
-const App: React.FC = () => {
-  useEffect(() => {
-    initBugfender();
-    
-    // Verificar preferencia de tema guardada o preferencia del sistema
-    const isDark = localStorage.getItem('darkMode') === 'true' || 
-      (!('darkMode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    
-    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-  }, []);
+// Inicializar servicios
+initBugfender();
 
+const App: React.FC = () => {
   return (
     <ErrorBoundary>
-      <Router>
-          <Header />
-            <Routes />
-          <Footer />
-      </Router>
+      <ThemeProvider>
+        <Router>
+          <div className="flex flex-col min-h-screen bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+            <Header />
+            <main className="flex-grow">
+              <Routes />
+            </main>
+            <Footer />
+            <ThemeToggleButton fixed size="lg" />
+          </div>
+        </Router>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 };

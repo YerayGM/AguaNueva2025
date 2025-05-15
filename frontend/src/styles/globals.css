@@ -2,84 +2,86 @@
 
 :root {
   /* Colores primarios */
-  --color-verdeCabildo: #017a9a;
-  --color-verdeCabildo-hover: #015e76;
-  --color-accent: #ff6b00;
-  --color-accent-hover: #e05e00;
+  --color-primary: #4b96d3;
+  --color-primary-hover: #3a7db3;
+  --color-accent: #ff8c3f;
+  --color-accent-hover: #e67a30;
   
   /* Colores de fondo */
   --bg-color: #f8fafc;
-  --bg-gradient-from: #eff6ff; /* blue-50 */
+  --bg-gradient-from: #f0f9ff; /* blue-50 más suave */
   --bg-gradient-to: #ffffff;
   
   /* Colores de texto */
-  --text-color: #1e293b;
+  --text-color: #334155; /* gray-700 - menos intenso que negro */
   --text-secondary: #64748b; /* gray-500 */
   --text-muted: #94a3b8; /* gray-400 */
   
   /* Colores de elementos UI */
   --card-bg: #ffffff;
   --card-border: #e2e8f0;
-  --header-bg: rgba(255, 255, 255, 0.8);
-  --footer-bg: #1e293b; /* gray-800 */
+  --header-bg: rgba(255, 255, 255, 0.9);
+  --footer-bg: #334155; /* gray-700 - menos intenso */
   --footer-text: #f8fafc;
-  --footer-text-muted: #94a3b8;
-  --footer-border: #334155;
+  --footer-text-muted: #cbd5e1;
+  --footer-border: #475569;
   
   /* Colores especiales */
-  --hero-gradient-from: var(--color-verdeCabildo);
-  --hero-gradient-to: #3b82f6; /* blue-500 */
-  --info-section-bg-from: #eff6ff; /* blue-50 */
-  --info-section-bg-to: #f0fdf4; /* green-50 */
-  --info-border: #dbeafe; /* blue-100 */
-  --help-section-bg: #eff6ff; /* blue-50 */
+  --hero-gradient-from: #4b96d3;
+  --hero-gradient-to: #60a5fa; /* blue-400 */
+  --info-section-bg-from: #f0f9ff; /* blue-50 más suave */
+  --info-section-bg-to: #f0f9ff; /* mismo tono para evitar contraste */
+  --info-border: #e0f2fe; /* blue-100 más suave */
+  --help-section-bg-from: #4b96d3;
+  --help-section-bg-to: #60a5fa;
   
   /* Efectos */
-  --shadow-color: rgba(0, 0, 0, 0.1);
-  --glow-color-from: var(--color-verdeCabildo);
-  --glow-color-via: #60a5fa; /* blue-400 */
-  --glow-color-to: var(--color-verdeCabildo);
+  --shadow-color: rgba(0, 0, 0, 0.05);
+  --glow-color-from: #4b96d3;
+  --glow-color-via: #93c5fd; /* blue-300 más suave */
+  --glow-color-to: #4b96d3;
 }
 
 [data-theme="dark"] {
   /* Colores primarios */
-  --color-verdeCabildo: #0d9dbe;
-  --color-verdeCabildo-hover: #0b7a94;
+  --color-primary: #60a5fa;
+  --color-primary-hover: #3b82f6;
   --color-accent: #ff8c3f;
   --color-accent-hover: #ff6b00;
   
   /* Colores de fondo */
-  --bg-color: #0f172a; /* gray-900 */
+  --bg-color: #1e293b; /* gray-800 - menos intenso que negro */
   --bg-gradient-from: #1e293b; /* gray-800 */
   --bg-gradient-to: #0f172a; /* gray-900 */
   
   /* Colores de texto */
-  --text-color: #f1f5f9; /* gray-100 */
+  --text-color: #e2e8f0; /* gray-200 - menos brillante que blanco */
   --text-secondary: #cbd5e1; /* gray-300 */
   --text-muted: #94a3b8; /* gray-400 */
   
   /* Colores de elementos UI */
   --card-bg: #1e293b; /* gray-800 */
   --card-border: #334155; /* gray-700 */
-  --header-bg: rgba(15, 23, 42, 0.8); /* gray-900 with opacity */
-  --footer-bg: #0f172a; /* darker gray-900 */
-  --footer-text: #f1f5f9;
-  --footer-text-muted: #64748b;
+  --header-bg: rgba(15, 23, 42, 0.9); /* gray-900 with opacity */
+  --footer-bg: #0f172a; /* gray-900 */
+  --footer-text: #e2e8f0;
+  --footer-text-muted: #94a3b8;
   --footer-border: #1e293b;
   
   /* Colores especiales */
-  --hero-gradient-from: #0d9dbe;
-  --hero-gradient-to: #3b82f6;
+  --hero-gradient-from: #3b82f6;
+  --hero-gradient-to: #60a5fa;
   --info-section-bg-from: #1e293b; /* gray-800 */
-  --info-section-bg-to: #0f172a; /* gray-900 */
+  --info-section-bg-to: #1e293b; /* mismo tono para evitar contraste */
   --info-border: #334155; /* gray-700 */
-  --help-section-bg: #1e293b; /* gray-800 */
+  --help-section-bg-from: #3b82f6;
+  --help-section-bg-to: #60a5fa;
   
   /* Efectos */
-  --shadow-color: rgba(0, 0, 0, 0.3);
-  --glow-color-from: #0d9dbe;
-  --glow-color-via: #38bdf8; /* blue-400 darker */
-  --glow-color-to: #0d9dbe;
+  --shadow-color: rgba(0, 0, 0, 0.2);
+  --glow-color-from: #3b82f6;
+  --glow-color-via: #60a5fa; /* blue-400 */
+  --glow-color-to: #3b82f6;
 }
 
 body {
@@ -87,19 +89,22 @@ body {
   color: var(--text-color);
   min-height: 100vh;
   transition: background-color 0.3s ease, color 0.3s ease;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  line-height: 1.5;
+  font-size: 16px;
 }
 
 /* Clases personalizadas */
-.text-verdeCabildo {
-  color: var(--color-verdeCabildo) !important;
+.text-primary {
+  color: var(--color-primary) !important;
 }
 
-.bg-verdeCabildo {
-  background-color: var(--color-verdeCabildo) !important;
+.bg-primary {
+  background-color: var(--color-primary) !important;
 }
 
-.hover\:bg-verdeCabildo-hover:hover {
-  background-color: var(--color-verdeCabildo-hover) !important;
+.hover\\:bg-primary-hover:hover {
+  background-color: var(--color-primary-hover) !important;
 }
 
 .text-accent {
@@ -110,8 +115,21 @@ body {
   background-color: var(--color-accent) !important;
 }
 
-.hover\:bg-accent-hover:hover {
+.hover\\:bg-accent-hover:hover {
   background-color: var(--color-accent-hover) !important;
+}
+
+/* Para compatibilidad con código existente */
+.text-verdeCabildo {
+  color: var(--color-primary) !important;
+}
+
+.bg-verdeCabildo {
+  background-color: var(--color-primary) !important;
+}
+
+.hover\\:bg-verdeCabildo-hover:hover {
+  background-color: var(--color-primary-hover) !important;
 }
 
 /* Animaciones */
@@ -154,12 +172,12 @@ body {
   transition-duration: 500ms;
 }
 
-.hover\:scale-105:hover {
+.hover\\:scale-105:hover {
   transform: scale(1.05);
 }
 
-.hover\:shadow-2xl:hover {
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+.hover\\:shadow-2xl:hover {
+  box-shadow: 0 25px 50px -12px var(--shadow-color);
 }
 
 /* Efectos de glassmorphism */
@@ -176,17 +194,17 @@ body {
   background-image: linear-gradient(to right, var(--tw-gradient-stops));
 }
 
-.from-verdeCabildo {
-  --tw-gradient-from: var(--color-verdeCabildo);
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(1, 122, 154, 0));
+.from-primary {
+  --tw-gradient-from: var(--color-primary);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(75, 150, 211, 0));
 }
 
-.to-blue-500 {
-  --tw-gradient-to: #3b82f6;
+.to-blue-400 {
+  --tw-gradient-to: #60a5fa;
 }
 
-.via-blue-400 {
-  --tw-gradient-stops: var(--tw-gradient-from), #60a5fa, var(--tw-gradient-to);
+.via-blue-300 {
+  --tw-gradient-stops: var(--tw-gradient-from), #93c5fd, var(--tw-gradient-to);
 }
 
 .bg-clip-text {
@@ -199,7 +217,7 @@ body {
 }
 
 /* Efectos de hover para enlaces */
-.group:hover .group-hover\:opacity-100 {
+.group:hover .group-hover\\:opacity-100 {
   opacity: 1;
 }
 
@@ -207,31 +225,31 @@ body {
   opacity: 0;
 }
 
-.group:hover .group-hover\:scale-110 {
+.group:hover .group-hover\\:scale-110 {
   transform: scale(1.1);
 }
 
-.group:hover .group-hover\:rotate-6 {
+.group:hover .group-hover\\:rotate-6 {
   transform: rotate(6deg);
 }
 
-.group:hover .group-hover\:text-blue-600 {
+.group:hover .group-hover\\:text-blue-600 {
   color: #2563eb;
 }
 
-.group:hover .group-hover\:text-verdeCabildo {
-  color: var(--color-verdeCabildo);
+.group:hover .group-hover\\:text-primary {
+  color: var(--color-primary);
 }
 
-.group:hover .group-hover\:bg-verdeCabildo {
-  background-color: var(--color-verdeCabildo);
+.group:hover .group-hover\\:bg-primary {
+  background-color: var(--color-primary);
 }
 
-.group:hover .group-hover\:bg-opacity-20 {
+.group:hover .group-hover\\:bg-opacity-20 {
   --tw-bg-opacity: 0.2;
 }
 
-.group:hover .group-hover\:opacity-30 {
+.group:hover .group-hover\\:opacity-30 {
   opacity: 0.3;
 }
 
@@ -240,18 +258,9 @@ body {
   filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
 }
 
-/* Estilos para el footer */
-.bg-gray-800 {
-  background-color: #1f2937;
-}
-
-.border-gray-700 {
-  border-color: #374151;
-}
-
 /* Estilos para secciones */
 .bg-blue-50 {
-  background-color: #eff6ff;
+  background-color: #f0f9ff;
 }
 
 .bg-gradient-to-br {
@@ -259,16 +268,16 @@ body {
 }
 
 .from-blue-50 {
-  --tw-gradient-from: #eff6ff;
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(239, 246, 255, 0));
+  --tw-gradient-from: #f0f9ff;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(240, 249, 255, 0));
 }
 
-.to-green-50 {
-  --tw-gradient-to: #f0fdf4;
+.to-blue-100 {
+  --tw-gradient-to: #e0f2fe;
 }
 
 .border-blue-100 {
-  border-color: #dbeafe;
+  border-color: #e0f2fe;
 }
 
 .shadow-inner {
@@ -288,91 +297,70 @@ body {
   border-radius: 9999px;
 }
 
-/* Estilos para texto */
-.tracking-tight {
-  letter-spacing: -0.025em;
-}
-
-.font-black {
-  font-weight: 900;
-}
-
-.font-bold {
-  font-weight: 700;
-}
-
-.font-medium {
-  font-weight: 500;
-}
-
-.font-light {
-  font-weight: 300;
-}
-
 /* Soporte para modo oscuro */
-.dark .dark\:bg-gray-800 {
-  background-color: #1f2937;
+.dark .dark\\:bg-gray-800 {
+  background-color: #1e293b;
 }
 
-.dark .dark\:bg-gray-900 {
-  background-color: #111827;
+.dark .dark\\:bg-gray-900 {
+  background-color: #0f172a;
 }
 
-.dark .dark\:text-white {
+.dark .dark\\:text-white {
   color: #ffffff;
 }
 
-.dark .dark\:text-gray-300 {
-  color: #d1d5db;
+.dark .dark\\:text-gray-300 {
+  color: #cbd5e1;
 }
 
-.dark .dark\:text-gray-400 {
-  color: #9ca3af;
+.dark .dark\\:text-gray-400 {
+  color: #94a3b8;
 }
 
-.dark .dark\:text-blue-400 {
+.dark .dark\\:text-blue-400 {
   color: #60a5fa;
 }
 
-.dark .dark\:border-gray-700 {
-  border-color: #374151;
+.dark .dark\\:border-gray-700 {
+  border-color: #334155;
 }
 
-.dark .dark\:hover\:bg-gray-700:hover {
-  background-color: #374151;
+.dark .dark\\:hover\\:bg-gray-700:hover {
+  background-color: #334155;
 }
 
-.dark .dark\:from-gray-900 {
-  --tw-gradient-from: #111827;
+.dark .dark\\:from-gray-900 {
+  --tw-gradient-from: #0f172a;
 }
 
-.dark .dark\:to-gray-800 {
-  --tw-gradient-to: #1f2937;
+.dark .dark\\:to-gray-800 {
+  --tw-gradient-to: #1e293b;
 }
 
 /* Efectos de glassmorphism para modo oscuro */
-.dark .dark\:bg-opacity-20 {
+.dark .dark\\:bg-opacity-20 {
   --tw-bg-opacity: 0.2;
 }
 
-.dark .dark\:brightness-110 {
+.dark .dark\\:brightness-110 {
   --tw-brightness: brightness(1.1);
   filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
 }
 
 /* Animaciones para modo oscuro */
-.dark .dark\:hover\:text-blue-300:hover {
+.dark .dark\\:hover\\:text-blue-300:hover {
   color: #93c5fd;
 }
 
-.dark .dark\:hover\:text-blue-400:hover {
+.dark .dark\\:hover\\:text-blue-400:hover {
   color: #60a5fa;
 }
 
-.dark .dark\:hover\:bg-blue-700:hover {
+.dark .dark\\:hover\\:bg-blue-700:hover {
   background-color: #1d4ed8;
 }
 
-.dark .dark\:from-blue-600 {
+.dark .dark\\:from-blue-600 {
   --tw-gradient-from: #2563eb;
 }
