@@ -25,9 +25,22 @@ export class ExpedientesController {
     return this.expedientesService.findAll();
   }
 
+  @Get('id/:id')
+  @ApiOperation({ summary: 'Buscar un expediente por ID numérico' })
+  @ApiParam({ name: 'id', description: 'ID numérico del expediente' })
+  @ApiResponse({ status: 200, description: 'Expediente encontrado', type: Expediente })
+  @ApiResponse({ status: 404, description: 'Expediente no encontrado' })
+  async findById(@Param('id', ParseIntPipe) id: number) {
+    const result = await this.expedientesService.findById(id);
+    if (!result) {
+      throw new NotFoundException(`Expediente con ID ${id} no encontrado`);
+    }
+    return result;
+  }
+
   // Movido hacia abajo para evitar conflicto con otras rutas que comienzan con 'buscar'
   @Get(':expediente')
-  @ApiOperation({ summary: 'Buscar un expediente por ID' })
+  @ApiOperation({ summary: 'Buscar un expediente por código' })
   @ApiParam({ name: 'expediente', description: 'Código del expediente' })
   @ApiResponse({ status: 200, description: 'Expediente encontrado', type: Expediente })
   @ApiResponse({ status: 404, description: 'Expediente no encontrado' })

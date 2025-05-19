@@ -18,13 +18,15 @@ const ExpedientesPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [searchDni, setSearchDni] = useState('')
   const [searchMunicipio, setSearchMunicipio] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage] = useState(10)
   const navigate = useNavigate()
   
   const loadExpedientes = async () => {
     setIsLoading(true)
     try {
       const data = await getExpedientes()
-      setExpedientes(data)
+      setExpedientes(data.data || [])
     } catch (error) {
       toast.error('Error al cargar expedientes')
       console.error('Error al cargar expedientes:', error)
@@ -36,7 +38,7 @@ const ExpedientesPage: React.FC = () => {
   const loadMunicipios = async () => {
     try {
       const data = await getMunicipios()
-      setMunicipios(data)
+      setMunicipios(data.data || [])
     } catch (error) {
       toast.error('Error al cargar municipios')
       console.error('Error al cargar municipios:', error)
@@ -52,7 +54,7 @@ const ExpedientesPage: React.FC = () => {
     setIsLoading(true)
     try {
       const data = await getExpedientesByDni(searchDni)
-      setExpedientes(data)
+      setExpedientes(data.data || [])
     } catch (error) {
       toast.error('Error al buscar expedientes por DNI')
       console.error('Error al buscar expedientes por DNI:', error)
@@ -70,7 +72,7 @@ const ExpedientesPage: React.FC = () => {
     setIsLoading(true)
     try {
       const data = await getExpedientesByMunicipio(parseInt(searchMunicipio))
-      setExpedientes(data)
+      setExpedientes(data.data || [])
     } catch (error) {
       toast.error('Error al buscar expedientes por municipio')
       console.error('Error al buscar expedientes por municipio:', error)
@@ -83,12 +85,19 @@ const ExpedientesPage: React.FC = () => {
     setSearchDni('')
     setSearchMunicipio('')
     loadExpedientes()
+    setCurrentPage(1)
   }
   
   useEffect(() => {
     loadExpedientes()
     loadMunicipios()
   }, [])
+  
+  // Lógica de paginación
+  const indexOfLastItem = currentPage * itemsPerPage
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage
+  const paginatedData = expedientes.slice(indexOfFirstItem, indexOfLastItem)
+  const totalPages = Math.ceil(expedientes.length / itemsPerPage)
   
   const formatDate = (dateString: string) => {
     try {
@@ -238,11 +247,38 @@ const ExpedientesPage: React.FC = () => {
       <Card>
         <Table
           columns={columns}
-          data={expedientes as unknown as Record<string, unknown>[]}
+          data={paginatedData as unknown as Record<string, unknown>[]}
           isLoading={isLoading}
           emptyMessage="No se encontraron expedientes"
           onRowClick={(row) => navigate(`/expedientes/${row.ID}`)}
         />
+        
+        {/* Paginación */}
+        {expedientes.length > 0 && (
+          <div className="flex justify-between items-center mt-4 px-2">
+            <div className="text-sm text-slate-500 dark:text-slate-400">
+              Mostrando {indexOfFirstItem + 1} a {Math.min(indexOfLastItem, expedientes.length)} de {expedientes.length} registros
+            </div>
+            <div className="flex space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+              >
+                Anterior
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+              >
+                Siguiente
+              </Button>
+            </div>
+          </div>
+        )}
       </Card>
     </div>
   )

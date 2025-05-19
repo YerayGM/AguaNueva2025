@@ -36,6 +36,18 @@ export class ExpedientesService {
     return expediente;
   }
 
+  async findById(id: number): Promise<Expediente> {
+    const expediente = await this.expedientesRepository.findOne({ 
+      where: { ID: id } as any
+    });
+    
+    if (!expediente) {
+      throw new NotFoundException(`No se encontró el expediente con ID ${id}`);
+    }
+    
+    return expediente;
+  }
+
   async findByDni(dni: string): Promise<Expediente[]> {
     if (!dni) {
       throw new Error('Debe proporcionar un DNI para realizar la búsqueda');

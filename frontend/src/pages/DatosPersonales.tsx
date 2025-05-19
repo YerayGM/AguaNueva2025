@@ -13,13 +13,18 @@ const DatosPersonalesPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [searchNombre, setSearchNombre] = useState('')
   const [searchApellidos, setSearchApellidos] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage] = useState(10)
   const navigate = useNavigate()
   
   const loadDatosPersonales = async () => {
     setIsLoading(true)
     try {
       const data = await getDatosPersonales()
-      setDatosPersonales(Array.isArray(data) ? data : [])
+      console.log('Datos recibidos:', data)
+      // La respuesta tiene formato {success: true, data: Array(2204), timestamp: '...'}
+      // Necesitamos extraer el array de data
+      setDatosPersonales(data.data || [])
     } catch (error) {
       toast.error('Error al cargar datos personales')
       console.error('Error al cargar datos personales:', error)
@@ -37,7 +42,9 @@ const DatosPersonalesPage: React.FC = () => {
     setIsLoading(true)
     try {
       const data = await searchDatosPersonales(searchNombre, searchApellidos)
-      setDatosPersonales(Array.isArray(data) ? data : [])
+      // La respuesta tiene formato {success: true, data: Array(...), timestamp: '...'}
+      setDatosPersonales(data.data || [])
+      setCurrentPage(1) // Resetear a la primera página después de buscar
     } catch (error) {
       toast.error('Error al buscar datos personales')
       console.error('Error al buscar datos personales:', error)
@@ -50,11 +57,18 @@ const DatosPersonalesPage: React.FC = () => {
     setSearchNombre('')
     setSearchApellidos('')
     loadDatosPersonales()
+    setCurrentPage(1)
   }
   
   useEffect(() => {
     loadDatosPersonales()
   }, [])
+  
+  // Lógica de paginación
+  const indexOfLastItem = currentPage * itemsPerPage
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage
+  const paginatedData = datosPersonales.slice(indexOfFirstItem, indexOfLastItem)
+  const totalPages = Math.ceil(datosPersonales.length / itemsPerPage)
   
   const columns = [
     {
@@ -177,11 +191,38 @@ const DatosPersonalesPage: React.FC = () => {
       <Card>
         <Table
           columns={columns}
-          data={datosPersonales.map((item) => ({ ...item })) as Record<string, unknown>[]}
+          data={paginatedData.map((item) => ({ ...item })) as Record<string, unknown>[]}
           isLoading={isLoading}
           emptyMessage="No se encontraron datos personales"
           onRowClick={(row) => navigate(`/datos-personales/${row.DNI}`)}
         />
+        
+        {/* Paginación */}
+        {datosPersonales.length > 0 && (
+          <div className="flex justify-between items-center mt-4 px-2">
+            <div className="text-sm text-slate-500 dark:text-slate-400">
+              Mostrando {indexOfFirstItem + 1} a {Math.min(indexOfLastItem, datosPersonales.length)} de {datosPersonales.length} registros
+            </div>
+            <div className="flex space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+              >
+                Anterior
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+              >
+                Siguiente
+              </Button>
+            </div>
+          </div>
+        )}
       </Card>
     </div>
   )

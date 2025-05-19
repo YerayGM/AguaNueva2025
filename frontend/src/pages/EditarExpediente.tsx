@@ -74,7 +74,7 @@ const EditarExpedientePage: React.FC = () => {
   const loadMunicipios = async () => {
     try {
       const data = await getMunicipios()
-      setMunicipios(data)
+      setMunicipios(data.data || [])
     } catch (error) {
       toast.error('Error al cargar municipios')
       console.error('Error al cargar municipios:', error)
@@ -211,10 +211,10 @@ const EditarExpedientePage: React.FC = () => {
               onChange={(value) => handleSelectChange('ID_MUN', value)}
               options={[
                 { label: 'Seleccione un municipio', value: '' },
-                ...municipios.map((municipio) => ({
+                ...(Array.isArray(municipios) ? municipios.map((municipio) => ({
                   label: municipio.MUNICIPIO,
                   value: municipio.ID_MUN.toString(),
-                })),
+                })) : []),
               ]}
               required
             />
