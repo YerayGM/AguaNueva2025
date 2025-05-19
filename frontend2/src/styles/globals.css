@@ -1,0 +1,199 @@
+@import "tailwindcss";
+
+:root {
+  /* Colores primarios - Nuevos tonos más modernos */
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
+  --color-accent: #f59e0b;
+  --color-accent-hover: #d97706;
+  
+  /* Colores de fondo */
+  --bg-color: #f8fafc;
+  --bg-gradient-from: #f1f5f9;
+  --bg-gradient-to: #ffffff;
+  
+  /* Colores de texto */
+  --text-color: #1e293b;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  
+  /* Colores de elementos UI */
+  --card-bg: #ffffff;
+  --card-border: #e2e8f0;
+  --header-bg: rgba(255, 255, 255, 0.95);
+  --footer-bg: #1e293b;
+  --footer-text: #f8fafc;
+  --footer-text-muted: #cbd5e1;
+  --footer-border: #334155;
+  
+  /* Colores especiales */
+  --hero-gradient-from: #3b82f6;
+  --hero-gradient-to: #60a5fa;
+  --info-section-bg-from: #eff6ff;
+  --info-section-bg-to: #f8fafc;
+  --info-border: #dbeafe;
+  --help-section-bg-from: #3b82f6;
+  --help-section-bg-to: #60a5fa;
+  
+  /* Efectos */
+  --shadow-color: rgba(0, 0, 0, 0.08);
+  --glow-color-from: #3b82f6;
+  --glow-color-via: #93c5fd;
+  --glow-color-to: #3b82f6;
+
+  /* Nuevos colores de estado */
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --info: #0ea5e9;
+}
+
+[data-theme="dark"] {
+  /* Colores primarios */
+  --color-primary: #60a5fa;
+  --color-primary-hover: #3b82f6;
+  --color-accent: #f59e0b;
+  --color-accent-hover: #d97706;
+  
+  /* Colores de fondo */
+  --bg-color: #0f172a;
+  --bg-gradient-from: #0f172a;
+  --bg-gradient-to: #1e293b;
+  
+  /* Colores de texto */
+  --text-color: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  
+  /* Colores de elementos UI */
+  --card-bg: #1e293b;
+  --card-border: #334155;
+  --header-bg: rgba(15, 23, 42, 0.95);
+  --footer-bg: #0f172a;
+  --footer-text: #f8fafc;
+  --footer-text-muted: #cbd5e1;
+  --footer-border: #1e293b;
+  
+  /* Colores especiales */
+  --hero-gradient-from: #1e40af;
+  --hero-gradient-to: #3b82f6;
+  --info-section-bg-from: #1e3a8a;
+  --info-section-bg-to: #172554;
+  --info-border: #1e40af;
+  --help-section-bg-from: #1e40af;
+  --help-section-bg-to: #3b82f6;
+  
+  /* Efectos */
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --glow-color-from: #2563eb;
+  --glow-color-via: #3b82f6;
+  --glow-color-to: #2563eb;
+
+  /* Nuevos colores de estado */
+  --success: #059669;
+  --warning: #d97706;
+  --error: #dc2626;
+  --info: #0284c7;
+}
+
+/* Estilos globales */
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+/* Transiciones */
+.transition-all {
+  transition-property: all;
+  transition-duration: 0.3s;
+  transition-timing-function: ease-in-out;
+}
+
+/* Botones personalizados */
+.btn {
+  @apply px-4 py-2 rounded-lg font-medium transition-all focus:outline-none focus:ring-2 focus:ring-offset-2;
+}
+
+.btn-primary {
+  @apply bg-primary text-white hover:bg-primary-hover focus:ring-primary/50;
+}
+
+.btn-secondary {
+  @apply bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 focus:ring-gray-500/30;
+}
+
+.btn-accent {
+  @apply bg-accent text-white hover:bg-accent-hover focus:ring-accent/50;
+}
+
+/* Formularios */
+.form-control {
+  @apply block w-full px-3 py-2 text-sm border rounded-lg transition-all;
+  @apply border-gray-300 dark:border-gray-600;
+  @apply bg-white dark:bg-gray-700;
+  @apply text-gray-900 dark:text-gray-100;
+  @apply focus:ring-2 focus:ring-primary/50 focus:border-primary dark:focus:border-primary;
+  @apply placeholder:text-gray-400 dark:placeholder:text-gray-500;
+}
+
+/* Tarjetas con sombras elegantes */
+.card {
+  @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm transition-all;
+  @apply border border-gray-100 dark:border-gray-700;
+  @apply hover:shadow-md;
+}
+
+.card-header {
+  @apply p-5 border-b border-gray-100 dark:border-gray-700;
+}
+
+.card-body {
+  @apply p-5;
+}
+
+.card-footer {
+  @apply p-5 border-t border-gray-100 dark:border-gray-700;
+}
+
+/* Tablas estilizadas */
+table.table-elegant {
+  @apply w-full;
+}
+
+table.table-elegant thead th {
+  @apply px-6 py-3 text-left text-xs font-medium uppercase tracking-wider;
+  @apply bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400;
+}
+
+table.table-elegant tbody td {
+  @apply px-6 py-4 text-sm;
+}
+
+table.table-elegant tbody tr {
+  @apply border-b border-gray-100 dark:border-gray-800;
+  @apply hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors;
+}
