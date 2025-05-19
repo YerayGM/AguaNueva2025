@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseIntPipe, HttpStatus, HttpCode, NotFoundException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { ExpedientesService } from './expedientes.service';
 import { CreateExpedienteDto } from './dto/create-expediente.dto';
@@ -13,6 +13,7 @@ export class ExpedientesController {
   @Post()
   @ApiOperation({ summary: 'Crear un nuevo expediente' })
   @ApiResponse({ status: 201, description: 'Expediente creado correctamente', type: Expediente })
+  @HttpCode(HttpStatus.CREATED)
   create(@Body() createExpedienteDto: CreateExpedienteDto) {
     return this.expedientesService.create(createExpedienteDto);
   }
@@ -24,13 +25,18 @@ export class ExpedientesController {
     return this.expedientesService.findAll();
   }
 
+  // Movido hacia abajo para evitar conflicto con otras rutas que comienzan con 'buscar'
   @Get(':expediente')
   @ApiOperation({ summary: 'Buscar un expediente por ID' })
-  @ApiParam({ name: 'expediente', description: 'Expediente de la persona' })
+  @ApiParam({ name: 'expediente', description: 'Código del expediente' })
   @ApiResponse({ status: 200, description: 'Expediente encontrado', type: Expediente })
   @ApiResponse({ status: 404, description: 'Expediente no encontrado' })
-  findOne(@Param('expediente') expediente: string) {
-    return this.expedientesService.findOne(expediente);
+  async findOne(@Param('expediente') expediente: string) {
+    const result = await this.expedientesService.findOne(expediente);
+    if (!result) {
+      throw new NotFoundException(`Expediente con código ${expediente} no encontrado`);
+    }
+    return result;
   }
 
   @Get('buscar/dni/:dni')
@@ -67,8 +73,8 @@ export class ExpedientesController {
   }
 
   @Patch(':expediente')
-  @ApiOperation({ summary: 'Actualizar un expediente por codigo de expediente' })
-  @ApiParam({ name: 'expediente', description: 'Expediente del expediente a actualizar' })
+  @ApiOperation({ summary: 'Actualizar un expediente por código de expediente' })
+  @ApiParam({ name: 'expediente', description: 'Código del expediente a actualizar' })
   @ApiResponse({ status: 200, description: 'Expediente actualizado correctamente' })
   @ApiResponse({ status: 404, description: 'Expediente no encontrado' })
   update(
@@ -79,10 +85,11 @@ export class ExpedientesController {
   }
 
   @Delete(':expediente')
-  @ApiOperation({ summary: 'Eliminar un expediente por codigo deexpediente' })
-  @ApiParam({ name: 'expediente', description: 'Expediente del expediente a eliminar' })
+  @ApiOperation({ summary: 'Eliminar un expediente por código de expediente' })
+  @ApiParam({ name: 'expediente', description: 'Código del expediente a eliminar' })
   @ApiResponse({ status: 200, description: 'Expediente eliminado correctamente' })
   @ApiResponse({ status: 404, description: 'Expediente no encontrado' })
+  @HttpCode(HttpStatus.OK)
   remove(@Param('expediente') expediente: string) {
     return this.expedientesService.remove(expediente);
   }

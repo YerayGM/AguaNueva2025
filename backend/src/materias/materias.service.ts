@@ -21,6 +21,11 @@ export class MateriaService {
     return this.materiaRepository.find();
   }
 
+  async findOne(id: number): Promise<Materia | null> {
+    const materia = await this.materiaRepository.findOne({ where: { ID: id } });
+    return materia || null;
+  }
+
   findByTipo(tipo: string) {
     return this.materiaRepository.find({ where: { TIPO: tipo } });
   }
