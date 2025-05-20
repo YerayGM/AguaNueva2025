@@ -10,8 +10,8 @@ export const getDatosPersonales = async (): Promise<DatosPersonales[]> => {
 };
 
 export const getDatosPersonalesByDni = async (dni: string): Promise<DatosPersonales> => {
-  const response = await apiService.get<{success: boolean, data: DatosPersonales}>(`${BASE_URL}/dni/${dni}`);
-  return response.data;
+  const response = await apiService.get<DatosPersonales>(`${BASE_URL}/dni/${dni}`);
+  return response;
 };
 
 export const searchDatosPersonales = async (

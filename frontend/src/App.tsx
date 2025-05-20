@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout'
 import HomePage from './pages/Home'
 import DatosPersonalesPage from './pages/DatosPersonales'
+import VerDatosPersonalesPage from './pages/VerDatosPersonales'
 import ExpedientesPage from './pages/Expedientes'
 import NuevoExpedientePage from './pages/NuevoExpediente'
 import VerExpedientePage from './pages/VerExpediente'
@@ -18,7 +19,7 @@ function App() {
           <Route index element={<DatosPersonalesPage />} />
           <Route path="nuevo" element={<EditarDatosPersonalesPage />} />
           <Route path="editar/:dni" element={<EditarDatosPersonalesPage />} />
-          <Route path=":dni" element={<EditarDatosPersonalesPage mode="view" />} />
+          <Route path=":dni" element={<VerDatosPersonalesPage />} />
         </Route>
         <Route path="expedientes">
           <Route index element={<ExpedientesPage />} />

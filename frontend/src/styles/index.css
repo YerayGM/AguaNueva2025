@@ -1,107 +1,113 @@
 @import "tailwindcss";
 
-@layer base {
-  body {
-    @apply bg-gray-900 text-white;
+:root {
+  --background-color: #111827;
+  --text-color: #f9fafb;
+  --accent-color: #3b82f6;
+}
+
+body {
+  @apply bg-gray-900 text-gray-100;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Personalización de scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-900;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-700 rounded-full hover:bg-blue-700 transition-colors duration-300;
+}
+
+/* Animaciones personalizadas */
+@layer utilities {
+  /* Animación de entrada con fade */
+  .fade-in {
+    opacity: 0;
+    animation: fade-in-animation 0.6s ease-in-out forwards;
   }
   
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-medium;
+  @keyframes fade-in-animation {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
   }
   
-  h1 {
-    @apply text-2xl mb-4;
+  /* Animación de entrada desde abajo */
+  .slide-up {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: slide-up-animation 0.8s ease-out forwards;
   }
   
-  h2 {
-    @apply text-xl mb-3;
+  @keyframes slide-up-animation {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
   }
   
-  h3 {
-    @apply text-lg mb-2;
-  }
-}
-
-/* Estilos personalizados para inputs */
-input[type="checkbox"] {
-  @apply w-4 h-4 text-blue-600 border border-gray-700 rounded bg-gray-800;
-}
-
-input[type="date"] {
-  @apply text-white;
-}
-
-/* Estilos para tablas */
-table {
-  @apply w-full text-sm text-left;
-}
-
-thead {
-  @apply bg-gray-800 text-gray-300;
-}
-
-th {
-  @apply px-4 py-3 text-xs font-medium uppercase;
-}
-
-td {
-  @apply px-4 py-3 border-t border-gray-800;
-}
-
-tr:hover {
-  @apply bg-gray-800;
-}
-
-/* Estilos específicos para cards */
-.card {
-  @apply bg-gray-800 border border-gray-700 rounded-lg p-4;
-}
-
-/* Botones */
-.btn {
-  @apply inline-flex items-center justify-center px-4 py-2 rounded-md font-medium text-sm;
-}
-
-.btn-primary {
-  @apply bg-blue-600 hover:bg-blue-700 text-white;
-}
-
-.btn-secondary {
-  @apply bg-gray-700 hover:bg-gray-600 text-white;
-}
-
-/* Badge para estados */
-.badge {
-  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
-}
-
-.badge-blue {
-  @apply bg-blue-900 text-blue-300;
-}
-
-.badge-green {
-  @apply bg-green-900 text-green-300;
-}
-
-.badge-red {
-  @apply bg-red-900 text-red-300;
-}
-
-.badge-yellow {
-  @apply bg-amber-900 text-amber-300;
-}
-
-/* Estilos para impresión */
-@media print {
-  body {
-    @apply bg-white text-black;
+  /* Animación de zoom lento */
+  .slow-zoom {
+    animation: slow-zoom-animation 30s linear infinite alternate;
   }
   
-  header, footer, button, .no-print {
-    @apply hidden;
+  @keyframes slow-zoom-animation {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.1); }
   }
   
-  .print-only {
-    @apply block;
+  /* Animación de contador */
+  .count-up {
+    opacity: 0;
+    transform: translateY(10px);
+    animation: count-up-animation 1.5s ease-out forwards;
   }
+  
+  @keyframes count-up-animation {
+    0% { opacity: 0; transform: translateY(10px); }
+    50% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 1; }
+  }
+  
+  /* Animación escalonada para elementos en lista */
+  .stagger-fade > *:nth-child(1) { animation-delay: 0.1s; }
+  .stagger-fade > *:nth-child(2) { animation-delay: 0.2s; }
+  .stagger-fade > *:nth-child(3) { animation-delay: 0.3s; }
+  .stagger-fade > *:nth-child(4) { animation-delay: 0.4s; }
+  .stagger-fade > *:nth-child(5) { animation-delay: 0.5s; }
+  
+  .stagger-fade > * {
+    opacity: 0;
+    animation: fade-in-animation 0.7s ease-out forwards;
+  }
+  
+  /* Colores personalizados adicionales */
+  .bg-gray-750 {
+    background-color: rgb(40, 44, 52);
+  }
+  
+  .bg-gray-850 {
+    background-color: rgb(32, 35, 42);
+  }
+  
+  .bg-gray-950 {
+    background-color: rgb(18, 20, 24);
+  }
+}
+
+/* Efecto de transición suave para todos los elementos */
+* {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-duration: 200ms;
+}
+
+/* Personalizaciones adicionales para la experiencia de usuario */
+.min-h-80 {
+  min-height: 20rem;
 }

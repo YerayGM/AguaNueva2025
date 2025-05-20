@@ -1,123 +1,197 @@
 import { Link, useLocation } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
   const location = useLocation()
   
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10)
+    }
+    
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+  
   const isActive = (path: string) => {
-    return location.pathname === path
+    return location.pathname === path || location.pathname.startsWith(`${path}/`)
   }
   
   return (
-    <header className="bg-gray-900 text-white">
-      <div className="container mx-auto px-4 py-4">
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      isScrolled 
+        ? 'bg-gray-900/95 backdrop-blur-md shadow-lg shadow-blue-900/10 py-2' 
+        : 'bg-gray-900 py-4'
+    }`}>
+      <div className="container mx-auto px-4">
         <div className="flex items-center justify-between">
-          <Link to="/" className="flex items-center space-x-3">
-            <img 
-              src="/logo.png" 
-              alt="Agua Nueva" 
-              className="h-8 w-8 object-contain" 
-            />
+          <Link to="/" className="flex items-center space-x-3 group">
+            <div className="relative">
+              <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-md group-hover:bg-blue-500/30 transition-all duration-300"></div>
+              <img 
+                src="/logo.png" 
+                alt="Agua Nueva" 
+                className="h-10 w-10 object-contain relative z-10 transition-transform duration-300 group-hover:scale-110" 
+              />
+            </div>
             <div>
-              <h1 className="text-lg font-medium text-white">
-                Agua Nueva 2025
+              <h1 className="text-xl font-bold text-white tracking-tight">
+                <span className="text-blue-400">Agua</span> Nueva 2025
               </h1>
               <p className="text-xs text-gray-400">Cabildo de Fuerteventura</p>
             </div>
           </Link>
           
+          {/* Desktop Menu */}
           <nav className="hidden md:block">
-            <ul className="flex space-x-6">
+            <ul className="flex space-x-2">
               <li>
                 <Link 
                   to="/" 
-                  className={`py-2 px-3 rounded-md ${
+                  className={`py-2 px-4 rounded-lg transition-all duration-300 flex items-center space-x-1 ${
                     isActive('/') 
-                      ? 'bg-blue-900 text-white' 
-                      : 'text-gray-300 hover:bg-gray-800'
+                      ? 'bg-blue-600/20 text-blue-300 border border-blue-500/30' 
+                      : 'text-gray-300 hover:bg-gray-800/80 border border-transparent'
                   }`}
                 >
-                  Inicio
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                  </svg>
+                  <span>Inicio</span>
                 </Link>
               </li>
               <li>
                 <Link 
                   to="/datos-personales" 
-                  className={`py-2 px-3 rounded-md ${
+                  className={`py-2 px-4 rounded-lg transition-all duration-300 flex items-center space-x-1 ${
                     isActive('/datos-personales') 
-                      ? 'bg-blue-900 text-white' 
-                      : 'text-gray-300 hover:bg-gray-800'
+                      ? 'bg-blue-600/20 text-blue-300 border border-blue-500/30' 
+                      : 'text-gray-300 hover:bg-gray-800/80 border border-transparent'
                   }`}
                 >
-                  Datos Personales
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <span>Datos Personales</span>
                 </Link>
               </li>
               <li>
                 <Link 
                   to="/expedientes" 
-                  className={`py-2 px-3 rounded-md ${
+                  className={`py-2 px-4 rounded-lg transition-all duration-300 flex items-center space-x-1 ${
                     isActive('/expedientes') 
-                      ? 'bg-blue-900 text-white' 
-                      : 'text-gray-300 hover:bg-gray-800'
+                      ? 'bg-blue-600/20 text-blue-300 border border-blue-500/30' 
+                      : 'text-gray-300 hover:bg-gray-800/80 border border-transparent'
                   }`}
                 >
-                  Expedientes
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span>Expedientes</span>
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/expedientes/nuevo"
+                  className="ml-2 bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-500 text-white py-2 px-4 rounded-lg transition-all duration-300 flex items-center space-x-1 shadow-md shadow-blue-900/20"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span>Nueva Solicitud</span>
                 </Link>
               </li>
             </ul>
           </nav>
+          
+          {/* Mobile Menu Toggle */}
+          <button 
+            type="button"
+            className="md:hidden p-2 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white focus:outline-none"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          >
+            {isMenuOpen ? (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            )}
+          </button>
         </div>
       </div>
       
-      {/* Mobile menu */}
-      {isMenuOpen && (
-        <div className="md:hidden bg-gray-800">
-          <nav className="px-4 py-3">
-            <ul className="space-y-1">
-              <li>
-                <Link 
-                  to="/" 
-                  className={`block py-2 px-3 rounded-md ${
-                    isActive('/') 
-                      ? 'bg-blue-900 text-white' 
-                      : 'text-gray-300 hover:bg-gray-700'
-                  }`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Inicio
-                </Link>
-              </li>
-              <li>
-                <Link 
-                  to="/datos-personales" 
-                  className={`block py-2 px-3 rounded-md ${
-                    isActive('/datos-personales') 
-                      ? 'bg-blue-900 text-white' 
-                      : 'text-gray-300 hover:bg-gray-700'
-                  }`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Datos Personales
-                </Link>
-              </li>
-              <li>
-                <Link 
-                  to="/expedientes" 
-                  className={`block py-2 px-3 rounded-md ${
-                    isActive('/expedientes') 
-                      ? 'bg-blue-900 text-white' 
-                      : 'text-gray-300 hover:bg-gray-700'
-                  }`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Expedientes
-                </Link>
-              </li>
-            </ul>
-          </nav>
-        </div>
-      )}
+      {/* Mobile menu with animation */}
+      <div className={`md:hidden transition-all duration-300 overflow-hidden ${isMenuOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'}`}>
+        <nav className="px-4 py-3 bg-gray-800/95 backdrop-blur-md border-t border-gray-700/50">
+          <ul className="space-y-2">
+            <li>
+              <Link 
+                to="/" 
+                className={`flex items-center space-x-3 py-2 px-3 rounded-md transition-all duration-300 ${
+                  isActive('/') 
+                    ? 'bg-blue-600/20 text-blue-300 border border-blue-500/30' 
+                    : 'text-gray-300 hover:bg-gray-700 border border-transparent'
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                <span>Inicio</span>
+              </Link>
+            </li>
+            <li>
+              <Link 
+                to="/datos-personales" 
+                className={`flex items-center space-x-3 py-2 px-3 rounded-md transition-all duration-300 ${
+                  isActive('/datos-personales') 
+                    ? 'bg-blue-600/20 text-blue-300 border border-blue-500/30' 
+                    : 'text-gray-300 hover:bg-gray-700 border border-transparent'
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <span>Datos Personales</span>
+              </Link>
+            </li>
+            <li>
+              <Link 
+                to="/expedientes" 
+                className={`flex items-center space-x-3 py-2 px-3 rounded-md transition-all duration-300 ${
+                  isActive('/expedientes') 
+                    ? 'bg-blue-600/20 text-blue-300 border border-blue-500/30' 
+                    : 'text-gray-300 hover:bg-gray-700 border border-transparent'
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>Expedientes</span>
+              </Link>
+            </li>
+            <li>
+              <Link 
+                to="/expedientes/nuevo" 
+                className="flex items-center space-x-3 py-2 px-3 rounded-md transition-all duration-300 bg-gradient-to-r from-blue-700 to-blue-600 text-white"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Nueva Solicitud</span>
+              </Link>
+            </li>
+          </ul>
+        </nav>
+      </div>
     </header>
   )
 }
