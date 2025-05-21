@@ -19,12 +19,14 @@ const VerExpedientePage: React.FC = () => {
   const [datosPersonales, setDatosPersonales] = useState<DatosPersonales | null>(null)
   const [datosExpedientes, setDatosExpedientes] = useState<DatosExpediente[]>([])
   
-  const loadExpediente = async () => {
+  const loadExpediente = React.useCallback(async () => {
     if (!id) return
     
     setIsLoading(true)
     try {
+      console.log(`Intentando cargar expediente con ID: ${id}`)
       const expedienteData = await getExpedienteById(id)
+      console.log('Datos de expediente recibidos:', expedienteData)
       setExpediente(expedienteData)
       
       // Cargar datos personales relacionados
@@ -65,17 +67,17 @@ const VerExpedientePage: React.FC = () => {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [id])
   
   useEffect(() => {
     loadExpediente()
-  }, [id])
+  }, [id, loadExpediente])
   
   const formatDate = (dateString: string) => {
     if (!dateString) return '—'
     try {
       return format(new Date(dateString), 'dd/MM/yyyy', { locale: es })
-    } catch (error) {
+    } catch {
       return '—'
     }
   }

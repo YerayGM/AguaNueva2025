@@ -2,17 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
-undefined
 import { toast } from 'react-hot-toast';
 import { getDatosPersonalesByDni } from '../services/datosPersonalesService';
-import type { DatosPersonales } from '../types';
+import { getExpedientesByDni } from '../services/expedientesService';
+import type { DatosPersonales, Expediente } from '../types';
 
 const VerDatosPersonalesPage: React.FC = () => {
   const { dni } = useParams<{ dni: string }>();
   const navigate = useNavigate();
   const [datos, setDatos] = useState<DatosPersonales | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [expedientesCount, setExpedientesCount] = useState({ total: 0 });
+  const [expedientes, setExpedientes] = useState<Expediente[]>([]);
   
   useEffect(() => {
     const fetchDatos = async () => {
@@ -20,27 +20,21 @@ const VerDatosPersonalesPage: React.FC = () => {
       
       setIsLoading(true);
       try {
-        // Crear datos de prueba para desarrollo
-        const mockData = {
-          DNI: dni,
-          APELLIDOS: "Apellido de Prueba",
-          NOMBREC: "Nombre de Prueba",
-          DIRECCION: "Calle de Prueba, 123",
-          LOCALIDAD: "Puerto del Rosario",
-          ID_MUN: 1,
-          TELEFONO: "928123456",
-          EMAIL: "prueba@example.com",
-          ACTIVIDADAGROPEC: "Agricultura",
-          PER_FIS: true,
-          PER_JUR: false
-        };
+        // Obtener datos personales reales de la API
+        const datosPersonales = await getDatosPersonalesByDni(dni);
+        setDatos(datosPersonales);
         
-        setDatos(mockData);
-        
-        // Simulamos datos de expedientes
-        setExpedientesCount({
-          total: 3
-        });
+        // Obtener expedientes asociados a este DNI
+        try {
+          const expedientesData = await getExpedientesByDni(dni);
+          // Los datos pueden venir en expedientesData.data o directamente en expedientesData
+          const expedientesList = expedientesData.data || 
+                                 (Array.isArray(expedientesData) ? expedientesData : []);
+          setExpedientes(expedientesList);
+        } catch (error) {
+          console.error('Error al cargar expedientes:', error);
+          setExpedientes([]);
+        }
       } catch (error) {
         console.error('Error al cargar datos personales:', error);
         toast.error('Error al cargar datos personales');
@@ -105,7 +99,6 @@ const VerDatosPersonalesPage: React.FC = () => {
           </div>
           <h1 className="text-2xl md:text-3xl font-bold text-white flex items-center">
             {datos.NOMBREC} {datos.APELLIDOS}
-undefined
           </h1>
         </div>
         
@@ -149,7 +142,7 @@ undefined
             </div>
             <div>
               <p className="text-sm text-blue-300">Total Expedientes</p>
-              <p className="text-2xl font-bold text-white">{expedientesCount.total}</p>
+              <p className="text-2xl font-bold text-white">{expedientes.length}</p>
             </div>
           </div>
         </Card>
@@ -236,16 +229,6 @@ undefined
             <p className="text-sm text-gray-400">Localidad</p>
             <p className="text-lg font-medium text-white">{datos.LOCALIDAD || 'No disponible'}</p>
           </div>
-          
-          <div className="space-y-1 p-2 rounded-lg hover:bg-gray-800/30 transition-colors">
-            <p className="text-sm text-gray-400">Código Postal</p>
-            <p className="text-lg font-medium text-white">{datos.CP || 'No disponible'}</p>
-          </div>
-          
-          <div className="space-y-1 p-2 rounded-lg hover:bg-gray-800/30 transition-colors">
-            <p className="text-sm text-gray-400">Provincia</p>
-            <p className="text-lg font-medium text-white">{datos.PROVINCIA || 'No disponible'}</p>
-          </div>
         </div>
       </Card>
       
@@ -262,28 +245,20 @@ undefined
         className="border-gray-800 hover:border-blue-900/30 transition-all duration-300"
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-undefined
+          <div className="space-y-1 p-2 rounded-lg hover:bg-gray-800/30 transition-colors">
+            <p className="text-sm text-gray-400">Actividad Agropecuaria</p>
+            <p className="text-lg font-medium text-white">{datos.ACTIVIDADAGROPEC || 'No disponible'}</p>
+          </div>
           
           <div className="space-y-1 p-2 rounded-lg hover:bg-gray-800/30 transition-colors">
-            <p className="text-sm text-gray-400">Última actualización</p>
+            <p className="text-sm text-gray-400">Tipo de Persona</p>
             <p className="text-lg font-medium text-white">
-              {datos.FECHA_ACTUALIZACION ? 
-                new Date(datos.FECHA_ACTUALIZACION).toLocaleDateString('es-ES', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                }) : 'No disponible'}
+              {datos.PER_FIS ? 'Física' : ''}
+              {datos.PER_JUR ? 'Jurídica' : ''}
+              {!datos.PER_FIS && !datos.PER_JUR ? 'No especificado' : ''}
             </p>
           </div>
         </div>
-        
-        {/* Notas o comentarios si existen */}
-        {datos.NOTAS && (
-          <div className="mt-4 p-4 bg-gray-800/40 rounded-lg border border-gray-700">
-            <p className="text-sm text-gray-400 mb-2">Notas:</p>
-            <p className="text-gray-300">{datos.NOTAS}</p>
-          </div>
-        )}
       </Card>
       
       {/* Expedientes asociados */}
@@ -315,81 +290,44 @@ undefined
         className="border-gray-800 hover:border-blue-900/30 transition-all duration-300"
       >
         {/* Si hay expedientes, mostrarlos en una tabla o lista */}
-        {expedientesCount.total > 0 ? (
+        {expedientes.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="min-w-full">
               <thead>
                 <tr className="border-b border-gray-800">
-                  <th className="py-3 text-left text-sm font-medium text-gray-400 tracking-wider">ID</th>
+                  <th className="py-3 text-left text-sm font-medium text-gray-400 tracking-wider">Expediente</th>
                   <th className="py-3 text-left text-sm font-medium text-gray-400 tracking-wider">Fecha</th>
                   <th className="py-3 text-left text-sm font-medium text-gray-400 tracking-wider">Localidad</th>
                   <th className="py-3 text-left text-sm font-medium text-gray-400 tracking-wider">Acciones</th>
                 </tr>
               </thead>
               <tbody className="stagger-fade">
-                <tr className="hover:bg-gray-800/50 transition-colors duration-200 border-b border-gray-800">
-                  <td className="py-4 px-2 whitespace-nowrap font-medium">EXP-2025/003</td>
-                  <td className="py-4 px-2 whitespace-nowrap">18/05/2025</td>
-                  <td className="py-4 px-2 whitespace-nowrap">Puerto del Rosario</td>
-                  <td className="py-4 px-2 whitespace-nowrap">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      to="/expedientes/3"
-                      className="hover:bg-amber-800/40 hover:border-amber-700 transition-all duration-300"
-                    >
-                      <span className="inline-flex items-center">
-                        <span>Ver</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 ml-1 transition-transform">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                      </span>
-                    </Button>
-                  </td>
-                </tr>
-                <tr className="hover:bg-gray-800/50 transition-colors duration-200 border-b border-gray-800">
-                  <td className="py-4 px-2 whitespace-nowrap font-medium">EXP-2025/002</td>
-                  <td className="py-4 px-2 whitespace-nowrap">10/04/2025</td>
-                  <td className="py-4 px-2 whitespace-nowrap">La Oliva</td>
-                  <td className="py-4 px-2 whitespace-nowrap">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      to="/expedientes/2"
-                      className="hover:bg-green-800/40 hover:border-green-700 transition-all duration-300"
-                    >
-                      <span className="inline-flex items-center">
-                        <span>Ver</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 ml-1 transition-transform">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                      </span>
-                    </Button>
-                  </td>
-                </tr>
-                <tr className="hover:bg-gray-800/50 transition-colors duration-200">
-                  <td className="py-4 px-2 whitespace-nowrap font-medium">EXP-2025/001</td>
-                  <td className="py-4 px-2 whitespace-nowrap">22/02/2025</td>
-                  <td className="py-4 px-2 whitespace-nowrap">Tuineje</td>
-                  <td className="py-4 px-2 whitespace-nowrap">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      to="/expedientes/1"
-                      className="hover:bg-green-800/40 hover:border-green-700 transition-all duration-300"
-                    >
-                      <span className="inline-flex items-center">
-                        <span>Ver</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 ml-1 transition-transform">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                      </span>
-                    </Button>
-                  </td>
-                </tr>
+                {expedientes.map((expediente) => (
+                  <tr key={expediente.ID} className="hover:bg-gray-800/50 transition-colors duration-200 border-b border-gray-800">
+                    <td className="py-4 px-2 whitespace-nowrap font-medium">{expediente.EXPEDIENTE}</td>
+                    <td className="py-4 px-2 whitespace-nowrap">
+                      {expediente.FECHA ? new Date(expediente.FECHA).toLocaleDateString('es-ES') : '—'}
+                    </td>
+                    <td className="py-4 px-2 whitespace-nowrap">{expediente.LOCALIDAD || '—'}</td>
+                    <td className="py-4 px-2 whitespace-nowrap">
+                      <Link to={`/expedientes/${expediente.ID}`}>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="hover:bg-amber-800/40 hover:border-amber-700 transition-all duration-300"
+                        >
+                          <span className="inline-flex items-center">
+                            <span>Ver</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 ml-1 transition-transform">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                          </span>
+                        </Button>
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -418,10 +356,6 @@ undefined
       
       {/* Acciones finales */}
       <div className="flex justify-between items-center pt-4 border-t border-gray-800">
-        <div className="text-sm text-gray-500">
-          <span>Última actualización: </span>
-          <span>20 de mayo de 2025 - 10:09</span>
-        </div>
         <div className="flex space-x-3">
           <Button 
             variant="outline"

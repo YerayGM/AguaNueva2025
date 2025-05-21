@@ -63,10 +63,19 @@ const EditarDatosPersonalesPage: React.FC<EditarDatosPersonalesPageProps> = ({ m
   const loadMunicipios = useCallback(async () => {
     try {
       const data = await getMunicipios()
-      setMunicipios(Array.isArray(data) ? data : [])
+      console.log('Datos de municipios recibidos en EditarDatosPersonales:', data)
+      // Verificar la estructura de los datos y extraer el array de municipios
+      if (data && data.data && Array.isArray(data.data)) {
+        setMunicipios(data.data)
+      } else if (Array.isArray(data)) {
+        setMunicipios(data)
+      } else {
+        console.error('Formato de datos de municipios inesperado:', data)
+        setMunicipios([])
+      }
     } catch (error) {
-      toast.error('Error al cargar municipios')
       console.error('Error al cargar municipios:', error)
+      toast.error('Error al cargar municipios')
       setMunicipios([])
     }
   }, [])
