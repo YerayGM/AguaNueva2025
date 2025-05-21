@@ -46,54 +46,52 @@ const ExpedientesPage: React.FC = () => {
   
   const handleSearchByDni = async () => {
     if (!searchDni) {
-      toast.error('Debe ingresar un DNI para buscar')
-      return
+      toast.error('Debe ingresar un DNI para buscar');
+      return;
     }
     
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      const data = await getExpedientesByDni(searchDni)
-      setExpedientes(data.data || [])
-      setCurrentPage(1) // Resetear a la primera página después de buscar
+      const expedientesData = await getExpedientesByDni(searchDni);
+      setExpedientes(expedientesData);
+      setCurrentPage(1);
     } catch (error) {
-      toast.error('Error al buscar expedientes por DNI')
-      console.error('Error al buscar expedientes por DNI:', error)
+      toast.error('Error al buscar expedientes por DNI');
+      console.error('Error al buscar expedientes por DNI:', error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
   
   const handleSearchByMunicipio = async () => {
     if (!searchMunicipio) {
-      toast.error('Debe seleccionar un municipio para buscar')
-      return
+      toast.error('Debe seleccionar un municipio para buscar');
+      return;
     }
     
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      const data = await getExpedientesByMunicipio(parseInt(searchMunicipio))
-      setExpedientes(data.data || [])
-      setCurrentPage(1) // Resetear a la primera página después de buscar
+      const expedientesData = await getExpedientesByMunicipio(parseInt(searchMunicipio));
+      setExpedientes(expedientesData);
+      setCurrentPage(1);
     } catch (error) {
-      toast.error('Error al buscar expedientes por municipio')
-      console.error('Error al buscar expedientes por municipio:', error)
+      toast.error('Error al buscar expedientes por municipio');
+      console.error('Error al buscar expedientes por municipio:', error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
   
   const loadExpedientes = async () => {
     setIsLoading(true)
     try {
-      const data = await getExpedientes()
-      const expedientesData = data.data || [];
-      setExpedientes(expedientesData)
+      const expedientesData = await getExpedientes();
+      setExpedientes(expedientesData);
       
       // Actualizar estadísticas
-      const stats = {
+      setEstadisticas({
         total: expedientesData.length
-      }
-      setEstadisticas(stats)
+      });
     } catch (error) {
       toast.error('Error al cargar expedientes')
       console.error('Error al cargar expedientes:', error)

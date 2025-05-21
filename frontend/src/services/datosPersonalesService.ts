@@ -1,42 +1,41 @@
-import apiService from './api';
+import api from './api';
 import type { DatosPersonales } from '../types';
 
-// URL base para todos los endpoints de datos personales
-// Esta ruta debe coincidir con el controlador en el backend
-const BASE_URL = 'datos-personales';
+// Obtener todos los datos personales
+export async function getDatosPersonales(): Promise<DatosPersonales[]> {
+  return api.get<DatosPersonales[]>('/datos-personales');
+}
 
-export const getDatosPersonales = async (): Promise<DatosPersonales[]> => {
-  return await apiService.get<DatosPersonales[]>(BASE_URL);
-};
+// Obtener datos personales por DNI
+export async function getDatosPersonalesByDni(dni: string): Promise<DatosPersonales> {
+  return api.get<DatosPersonales>(`/datos-personales/dni/${dni}`);
+}
 
-export const getDatosPersonalesByDni = async (dni: string): Promise<DatosPersonales> => {
-  const response = await apiService.get<DatosPersonales>(`${BASE_URL}/dni/${dni}`);
-  return response;
-};
-
-export const searchDatosPersonales = async (
-  nombre?: string, 
-  apellidos?: string
-): Promise<DatosPersonales[]> => {
+// Buscar datos personales por nombre y/o apellidos
+export async function searchDatosPersonales(nombre?: string, apellidos?: string): Promise<DatosPersonales[]> {
   const params: Record<string, string> = {};
   if (nombre) params.nombre = nombre;
   if (apellidos) params.apellidos = apellidos;
   
-  return await apiService.get<DatosPersonales[]>(`${BASE_URL}/buscar`, params);
-};
+  return api.get<DatosPersonales[]>('/datos-personales/buscar', params);
+}
 
-export const getDatosPersonalesByMunicipio = async (idMunicipio: number): Promise<DatosPersonales[]> => {
-  return await apiService.get<DatosPersonales[]>(`${BASE_URL}/municipio/${idMunicipio}`);
-};
+// Obtener datos personales por municipio
+export async function getDatosPersonalesByMunicipio(idMunicipio: number): Promise<DatosPersonales[]> {
+  return api.get<DatosPersonales[]>(`/datos-personales/municipio/${idMunicipio}`);
+}
 
-export const createDatosPersonales = async (data: Partial<DatosPersonales>): Promise<DatosPersonales> => {
-  return await apiService.post<DatosPersonales>(BASE_URL, data as Record<string, unknown>);
-};
+// Crear nuevos datos personales
+export async function createDatosPersonales(datos: Partial<DatosPersonales>): Promise<DatosPersonales> {
+  return api.post<DatosPersonales>('/datos-personales', datos);
+}
 
-export const updateDatosPersonales = async (dni: string, data: Partial<DatosPersonales>): Promise<void> => {
-  await apiService.patch<void>(`${BASE_URL}/${dni}`, data as Record<string, unknown>);
-};
+// Actualizar datos personales existentes
+export async function updateDatosPersonales(dni: string, datos: Partial<DatosPersonales>): Promise<DatosPersonales> {
+  return api.patch<DatosPersonales>(`/datos-personales/${dni}`, datos);
+}
 
-export const deleteDatosPersonales = async (dni: string): Promise<void> => {
-  await apiService.delete<void>(`${BASE_URL}/${dni}`);
-};
+// Eliminar datos personales
+export async function deleteDatosPersonales(dni: string): Promise<void> {
+  return api.delete<void>(`/datos-personales/${dni}`);
+}

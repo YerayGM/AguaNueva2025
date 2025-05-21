@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
-
 import { getRecentExpedientes, getExpedientes } from '../services/expedientesService'
 import type { Expediente } from '../types'
 
@@ -20,19 +19,21 @@ const Home: React.FC = () => {
       try {
         // Cargar expedientes recientes
         const recentExpedientes = await getRecentExpedientes(3)
-        setExpedientes(recentExpedientes.data || [])
+        setExpedientes(recentExpedientes)
         
         // Cargar todos los expedientes para estadísticas
         const allExpedientes = await getExpedientes()
-        const expedientesData = allExpedientes.data || []
         
         // Actualizar estadísticas
         setStats({
-          total: expedientesData.length
+          total: allExpedientes.length
         })
 
       } catch (error) {
         console.error('Error al cargar datos:', error)
+        // Establecer valores predeterminados en caso de error
+        setExpedientes([])
+        setStats({ total: 0 })
       } finally {
         setIsLoading(false)
       }
@@ -69,13 +70,6 @@ const Home: React.FC = () => {
             <p className="text-xl md:text-2xl text-blue-100 max-w-2xl font-light">
               Sistema de gestión de subvenciones para el agua agrícola
             </p>
-          </div>
-          
-          {/* Onda decorativa */}
-          <div className="absolute bottom-0 left-0 w-full">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 120" className="w-full h-auto">
-              <path fill="#111827" fillOpacity="1" d="M0,64L48,80C96,96,192,128,288,122.7C384,117,480,75,576,64C672,53,768,75,864,85.3C960,96,1056,96,1152,85.3C1248,75,1344,53,1392,42.7L1440,32L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z"></path>
-            </svg>
           </div>
         </div>
       </div>
@@ -216,82 +210,51 @@ const Home: React.FC = () => {
               <table className="min-w-full">
                 <thead>
                   <tr className="border-b border-gray-800">
-                    <th className="py-3 text-left text-sm font-medium text-gray-400 tracking-wider">ID</th>
+                    <th className="py-3 text-left text-sm font-medium text-gray-400 tracking-wider">Expediente</th>
                     <th className="py-3 text-left text-sm font-medium text-gray-400 tracking-wider">Fecha</th>
                     <th className="py-3 text-left text-sm font-medium text-gray-400 tracking-wider">Localidad</th>
                     <th className="py-3 text-left text-sm font-medium text-gray-400 tracking-wider">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="stagger-fade">
-                  <tr className="hover:bg-gray-800/50 transition-colors duration-200 border-b border-gray-800">
-                    <td className="py-4 px-2 whitespace-nowrap font-medium">EXP-2025/003</td>
-                    <td className="py-4 px-2 whitespace-nowrap">18/05/2025</td>
-                    <td className="py-4 px-2 whitespace-nowrap">
-                      Puerto del Rosario
-                    </td>
-                    <td className="py-4 px-2 whitespace-nowrap">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        to="/expedientes/3"
-                        className="hover:bg-amber-800/40 hover:border-amber-700 transition-all duration-300"
-                      >
-                        <span className="inline-flex items-center">
-                          <span>Ver</span>
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 ml-1 transition-transform">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                        </span>
-                      </Button>
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-gray-800/50 transition-colors duration-200 border-b border-gray-800">
-                    <td className="py-4 px-2 whitespace-nowrap font-medium">EXP-2025/002</td>
-                    <td className="py-4 px-2 whitespace-nowrap">10/04/2025</td>
-                    <td className="py-4 px-2 whitespace-nowrap">
-                      La Oliva
-                    </td>
-                    <td className="py-4 px-2 whitespace-nowrap">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        to="/expedientes/2"
-                        className="hover:bg-amber-800/40 hover:border-amber-700 transition-all duration-300"
-                      >
-                        <span className="inline-flex items-center">
-                          <span>Ver</span>
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 ml-1 transition-transform">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                        </span>
-                      </Button>
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-gray-800/50 transition-colors duration-200">
-                    <td className="py-4 px-2 whitespace-nowrap font-medium">EXP-2025/001</td>
-                    <td className="py-4 px-2 whitespace-nowrap">22/02/2025</td>
-                    <td className="py-4 px-2 whitespace-nowrap">
-                      Tuineje
-                    </td>
-                    <td className="py-4 px-2 whitespace-nowrap">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        to="/expedientes/1"
-                        className="hover:bg-amber-800/40 hover:border-amber-700 transition-all duration-300"
-                      >
-                        <span className="inline-flex items-center">
-                          <span>Ver</span>
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 ml-1 transition-transform">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                        </span>
-                      </Button>
-                    </td>
-                  </tr>
+                  {expedientes.length > 0 ? (
+                    expedientes.map((expediente) => (
+                      <tr key={expediente.ID} className="hover:bg-gray-800/50 transition-colors duration-200 border-b border-gray-800">
+                        <td className="py-4 px-2 whitespace-nowrap font-medium">{expediente.EXPEDIENTE}</td>
+                        <td className="py-4 px-2 whitespace-nowrap">
+                          {expediente.FECHA ? 
+                            new Date(expediente.FECHA).toLocaleDateString('es-ES') : 
+                            'Sin fecha'}
+                        </td>
+                        <td className="py-4 px-2 whitespace-nowrap">
+                          {expediente.LOCALIDAD}
+                        </td>
+                        <td className="py-4 px-2 whitespace-nowrap">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            as={Link}
+                            to={`/expedientes/${expediente.ID}`}
+                            className="hover:bg-blue-800/40 hover:border-blue-700 transition-all duration-300"
+                          >
+                            <span className="inline-flex items-center">
+                              <span>Ver</span>
+                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 ml-1 transition-transform">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              </svg>
+                            </span>
+                          </Button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={4} className="py-4 px-2 text-center text-gray-400">
+                        No hay expedientes recientes
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>

@@ -20,9 +20,8 @@ const DatosPersonalesPage: React.FC = () => {
   const loadDatosPersonales = async () => {
     setIsLoading(true)
     try {
-      const data = await getDatosPersonales()
-      console.log('Datos recibidos:', data)
-      setDatosPersonales(data.data || [])
+      const datos = await getDatosPersonales()
+      setDatosPersonales(datos)
     } catch (error) {
       toast.error('Error al cargar datos personales')
       console.error('Error al cargar datos personales:', error)
@@ -39,9 +38,9 @@ const DatosPersonalesPage: React.FC = () => {
     
     setIsLoading(true)
     try {
-      const data = await searchDatosPersonales(searchNombre, searchApellidos)
-      setDatosPersonales(data.data || [])
-      setCurrentPage(1) // Resetear a la primera página después de buscar
+      const datos = await searchDatosPersonales(searchNombre, searchApellidos)
+      setDatosPersonales(datos)
+      setCurrentPage(1)
     } catch (error) {
       toast.error('Error al buscar datos personales')
       console.error('Error al buscar datos personales:', error)

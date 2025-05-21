@@ -1,34 +1,42 @@
-import apiService from './api';
+import api from './api';
 import type { Materia } from '../types';
 
-// URL base para todos los endpoints de materias
-const BASE_URL = 'materias';
+// Obtener todas las materias
+export async function getMaterias(): Promise<Materia[]> {
+  try {
+    return await api.get<Materia[]>('/materias');
+  } catch (error) {
+    console.error('Error al obtener materias:', error);
+    return [];
+  }
+}
 
-export const getMaterias = async (): Promise<Materia[]> => {
-  return await apiService.get<Materia[]>(BASE_URL);
-};
+// Obtener materia por ID
+export async function getMateriaById(id: number): Promise<Materia> {
+  return api.get<Materia>(`/materias/${id}`);
+}
 
-export const getMateriaById = async (id: number): Promise<Materia> => {
-  const response = await apiService.get<{success: boolean, data: Materia}>(`${BASE_URL}/${id}`);
-  return response.data;
-};
+// Obtener materias por tipo
+export async function getMateriasByTipo(tipo: string): Promise<Materia[]> {
+  try {
+    return await api.get<Materia[]>(`/materias/tipo/${tipo}`);
+  } catch (error) {
+    console.error(`Error al obtener materias por tipo ${tipo}:`, error);
+    return [];
+  }
+}
 
-export const getMateriasByTipo = async (tipo: string): Promise<Materia[]> => {
-  return await apiService.get<Materia[]>(`${BASE_URL}/tipo/${tipo}`);
-};
+// Crear una nueva materia
+export async function createMateria(materia: Partial<Materia>): Promise<Materia> {
+  return api.post<Materia>('/materias', materia);
+}
 
-export const getMateriasByNombre = async (nombre: string): Promise<Materia[]> => {
-  return await apiService.get<Materia[]>(`${BASE_URL}/nombre/${nombre}`);
-};
+// Actualizar una materia existente
+export async function updateMateria(id: number, materia: Partial<Materia>): Promise<Materia> {
+  return api.patch<Materia>(`/materias/${id}`, materia);
+}
 
-export const createMateria = async (data: Partial<Materia>): Promise<Materia> => {
-  return await apiService.post<Materia>(BASE_URL, data as Record<string, unknown>);
-};
-
-export const updateMateria = async (id: number, data: Partial<Materia>): Promise<void> => {
-  await apiService.patch<void>(`${BASE_URL}/${id}`, data as Record<string, unknown>);
-};
-
-export const deleteMateria = async (id: number): Promise<void> => {
-  await apiService.delete<void>(`${BASE_URL}/${id}`);
-};
+// Eliminar una materia
+export async function deleteMateria(id: number): Promise<void> {
+  return api.delete<void>(`/materias/${id}`);
+}

@@ -16,23 +16,25 @@ const VerDatosPersonalesPage: React.FC = () => {
   
   useEffect(() => {
     const fetchDatos = async () => {
-      if (!dni) return;
-      
+      if (!dni) {
+        setIsLoading(false);
+        toast.error('DNI no especificado');
+        navigate('/datos-personales');
+        return;
+      }
       setIsLoading(true);
       try {
-        // Obtener datos personales reales de la API
+        // Obtener datos personales
         const datosPersonales = await getDatosPersonalesByDni(dni);
         setDatos(datosPersonales);
         
-        // Obtener expedientes asociados a este DNI
+        // Obtener expedientes asociados - ahora con manejo de errores mejorado
         try {
           const expedientesData = await getExpedientesByDni(dni);
-          // Los datos pueden venir en expedientesData.data o directamente en expedientesData
-          const expedientesList = expedientesData.data || 
-                                 (Array.isArray(expedientesData) ? expedientesData : []);
-          setExpedientes(expedientesList);
-        } catch (error) {
-          console.error('Error al cargar expedientes:', error);
+          setExpedientes(expedientesData);
+        } catch {
+          console.log('No se encontraron expedientes asociados al DNI:', dni);
+          // No mostrar error, simplemente establecer un array vacío
           setExpedientes([]);
         }
       } catch (error) {

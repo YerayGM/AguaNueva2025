@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom' // Añadimos useNavigate
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import Table from '../components/ui/Table'
-import type { Expediente, DatosExpediente, DatosPersonales } from '../types'
+import type { Expediente, DatosExpediente, DatosPersonales, Materia } from '../types'
 import { getExpedienteById } from '../services/expedientesService'
 import { getDatosPersonalesByDni } from '../services/datosPersonalesService'
-import { getDatosExpedientes } from '../services/datosExpedientesService'
+import { getDatosExpedienteByNumero } from '../services/datosExpedientesService'
 import { getMateriaById } from '../services/materiasService'
 import { toast } from 'react-hot-toast'
 import { format } from 'date-fns'
@@ -14,56 +14,82 @@ import { es } from 'date-fns/locale'
 
 const VerExpedientePage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate(); // Usar navigate para redireccionar
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null); // Estado para errores
   const [expediente, setExpediente] = useState<Expediente | null>(null)
   const [datosPersonales, setDatosPersonales] = useState<DatosPersonales | null>(null)
   const [datosExpedientes, setDatosExpedientes] = useState<DatosExpediente[]>([])
+  const [materias, setMaterias] = useState<Record<number, Materia>>({})
   
   const loadExpediente = React.useCallback(async () => {
     if (!id) return
     
     setIsLoading(true)
+    setError(null); // Reseteamos el error
+    
     try {
-      console.log(`Intentando cargar expediente con ID: ${id}`)
       const expedienteData = await getExpedienteById(id)
-      console.log('Datos de expediente recibidos:', expedienteData)
       setExpediente(expedienteData)
       
       // Cargar datos personales relacionados
       try {
-        const personaData = await getDatosPersonalesByDni(expedienteData.DNI)
-        setDatosPersonales(personaData)
+        if (expedienteData && expedienteData.DNI) {
+          const personaData = await getDatosPersonalesByDni(expedienteData.DNI)
+          setDatosPersonales(personaData)
+        } else {
+          setDatosPersonales(null)
+        }
       } catch (error) {
         console.error('Error al cargar datos personales:', error)
+        setDatosPersonales(null)
       }
       
       // Cargar datos de expedientes
       try {
-        const datosExpData = await getDatosExpedientes()
-        // Filtrar solo los que corresponden a este expediente
-        const filteredDatos = datosExpData.filter(
-          dato => dato.EXPEDIENTE === expedienteData.EXPEDIENTE
-        )
-        
-        setDatosExpedientes(filteredDatos)
-        
-        // Añadir nombre de materia a cada dato de expediente
-        for (const dato of filteredDatos) {
+        if (expedienteData && expedienteData.EXPEDIENTE) {
           try {
-            const materia = await getMateriaById(dato.ID_MATERIA)
-            dato.materiaName = materia.MATERIA
+            const datosExp = await getDatosExpedienteByNumero(expedienteData.EXPEDIENTE)
+            setDatosExpedientes(Array.isArray(datosExp) ? datosExp : [])
+            
+            // Solo cargar materias si hay datos de expediente
+            if (Array.isArray(datosExp) && datosExp.length > 0) {
+              const materiasObj: Record<number, Materia> = {};
+              for (const dato of datosExp) {
+                if (!materiasObj[dato.ID_MATERIA]) {
+                  try {
+                    const materia = await getMateriaById(dato.ID_MATERIA)
+                    materiasObj[dato.ID_MATERIA] = materia
+                  } catch (error) {
+                    console.error(`Error al cargar materia ID ${dato.ID_MATERIA}:`, error)
+                  }
+                }
+              }
+              setMaterias(materiasObj)
+            }
           } catch (error) {
-            console.error(`Error al cargar materia ID ${dato.ID_MATERIA}:`, error)
+            console.log('No se encontraron datos de expediente asociados:', error)
+            setDatosExpedientes([])
           }
         }
-        
       } catch (error) {
-        console.error('Error al cargar datos de expedientes:', error)
+        console.error('Error general al cargar datos de expedientes:', error)
+        setDatosExpedientes([])
       }
       
-    } catch (error) {
-      toast.error('Error al cargar el expediente')
+    } catch (error: any) {
       console.error('Error al cargar el expediente:', error)
+      
+      // Manejo específico de error 404
+      if (error.response && error.response.status === 404) {
+        setError("El expediente solicitado no existe en la base de datos");
+        // No mostramos toast para 404, es una condición esperada
+      } else {
+        setError("Error al cargar el expediente. Por favor, inténtelo más tarde.");
+        toast.error('Error al cargar el expediente')
+      }
+      
+      setExpediente(null)
     } finally {
       setIsLoading(false)
     }
@@ -73,10 +99,11 @@ const VerExpedientePage: React.FC = () => {
     loadExpediente()
   }, [id, loadExpediente])
   
-  const formatDate = (dateString: string) => {
-    if (!dateString) return '—'
+  const formatDate = (dateValue: string | Date) => {
+    if (!dateValue) return '—'
     try {
-      return format(new Date(dateString), 'dd/MM/yyyy', { locale: es })
+      const dateObj = typeof dateValue === 'string' ? new Date(dateValue) : dateValue
+      return format(dateObj, 'dd/MM/yyyy', { locale: es })
     } catch {
       return '—'
     }
@@ -85,41 +112,46 @@ const VerExpedientePage: React.FC = () => {
   const datosExpedientesColumns = [
     {
       header: 'Concepto',
-      accessor: 'materiaName',
-      render: (value: string) => value || '—',
+      accessor: 'ID_MATERIA',
+      render: (value: unknown) => {
+        const materiaId = value as number;
+        return materias[materiaId]?.MATERIA || '—';
+      }
     },
     {
       header: 'Multiplicador',
       accessor: 'MULTIPLICADOR',
-    },
-    {
-      header: 'Mínimo',
-      accessor: 'MINIMO',
-    },
-    {
-      header: 'Máximo',
-      accessor: 'MAXIMO',
+      render: (value: unknown) => {
+        const multi = Number(value);
+        return isNaN(multi) ? '—' : multi.toFixed(2);
+      }
     },
     {
       header: 'Cantidad',
       accessor: 'CANTIDAD',
+      render: (value: unknown) => value || '0'
+    },
+    {
+      header: 'Cantidad Final',
+      accessor: 'CANTIDAD_I',
+      render: (value: unknown) => value || '0'
     },
     {
       header: 'Desde',
       accessor: 'DESDE',
-      render: (value: string) => formatDate(value),
+      render: (value: unknown) => formatDate(value as string)
     },
     {
       header: 'Hasta',
       accessor: 'HASTA',
-      render: (value: string) => formatDate(value),
+      render: (value: unknown) => formatDate(value as string)
     },
     {
       header: 'Cultivo',
       accessor: 'CULTIVO',
-      render: (value: string) => value || '—',
+      render: (value: unknown) => (value as string) || '—'
     },
-  ]
+  ];
   
   if (isLoading) {
     return (
@@ -135,14 +167,22 @@ const VerExpedientePage: React.FC = () => {
     )
   }
   
-  if (!expediente) {
+  if (error || !expediente) {
     return (
       <div className="text-center py-12">
-        <p className="text-xl text-slate-600 dark:text-slate-300">
-          No se encontró el expediente solicitado
-        </p>
+        <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-6 mb-6 inline-block">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-red-500 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <p className="text-xl font-medium text-red-700 dark:text-red-300">
+            {error || "No se encontró el expediente solicitado"}
+          </p>
+          <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+            Verifique que el ID del expediente sea correcto o contacte al administrador.
+          </p>
+        </div>
         <Link to="/expedientes" className="mt-4 inline-block">
-          <Button>Volver a Expedientes</Button>
+          <Button variant="primary">Volver a Expedientes</Button>
         </Link>
       </div>
     )
@@ -297,13 +337,31 @@ const VerExpedientePage: React.FC = () => {
         </Card>
       </div>
       
-      <Card title="Datos del Expediente">
-        <Table
-          columns={datosExpedientesColumns}
-          data={datosExpedientes}
-          isLoading={isLoading}
-          emptyMessage="No hay datos específicos para este expediente"
-        />
+      <Card 
+        title="Conceptos del Expediente"
+        actions={
+          <Link to={`/expedientes/${expediente.ID}/conceptos/nuevo`}>
+            <Button variant="outline" size="sm">
+              Añadir Concepto
+            </Button>
+          </Link>
+        }
+      >
+        {datosExpedientes.length > 0 ? (
+          <Table
+            columns={datosExpedientesColumns}
+            data={datosExpedientes as unknown as Record<string, unknown>[]}
+            isLoading={isLoading}
+          />
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p className="text-lg">No hay conceptos asociados a este expediente</p>
+            <p className="mt-2">Puedes añadir conceptos utilizando el botón de arriba</p>
+          </div>
+        )}
       </Card>
     </div>
   )

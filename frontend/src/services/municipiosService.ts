@@ -1,25 +1,27 @@
-import apiService from './api';
+import api from './api';
 import type { Municipio } from '../types';
 
-// URL base para todos los endpoints de municipios
-const BASE_URL = 'municipios';
+// Obtener todos los municipios
+export async function getMunicipios(): Promise<Municipio[]> {
+  return api.get<Municipio[]>('/municipios');
+}
 
-export const getMunicipios = async (): Promise<{success: boolean, data: Municipio[]}> => {
-  return await apiService.get<{success: boolean, data: Municipio[]}>(BASE_URL);
-};
+// Obtener municipio por ID
+export async function getMunicipioById(id: number): Promise<Municipio> {
+  return api.get<Municipio>(`/municipios/${id}`);
+}
 
-export const getMunicipioById = async (id: number): Promise<Municipio> => {
-  return await apiService.get<Municipio>(`${BASE_URL}/${id}`);
-};
+// Crear un nuevo municipio
+export async function createMunicipio(municipio: Partial<Municipio>): Promise<Municipio> {
+  return api.post<Municipio>('/municipios', municipio);
+}
 
-export const createMunicipio = async (data: Partial<Municipio>): Promise<Municipio> => {
-  return await apiService.post<Municipio>(BASE_URL, data as Record<string, unknown>);
-};
+// Actualizar un municipio existente
+export async function updateMunicipio(id: number, municipio: Partial<Municipio>): Promise<Municipio> {
+  return api.patch<Municipio>(`/municipios/${id}`, municipio);
+}
 
-export const updateMunicipio = async (id: number, data: Partial<Municipio>): Promise<void> => {
-  await apiService.patch<void>(`${BASE_URL}/${id}`, data as Record<string, unknown>);
-};
-
-export const deleteMunicipio = async (id: number): Promise<void> => {
-  await apiService.delete<void>(`${BASE_URL}/${id}`);
-};
+// Eliminar un municipio
+export async function deleteMunicipio(id: number): Promise<void> {
+  return api.delete<void>(`/municipios/${id}`);
+}

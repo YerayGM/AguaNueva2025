@@ -4,6 +4,7 @@ import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
 import Select from '../components/ui/Select'
+import Tabs from '../components/ui/Tabs'
 import type { Expediente, Municipio } from '../types'
 import { getExpedienteById, updateExpediente } from '../services/expedientesService'
 import { getMunicipios } from '../services/municipiosService'
@@ -36,6 +37,8 @@ const EditarExpedientePage: React.FC = () => {
     OB_TEC: '',
     TXT_INFORME: '',
   })
+
+  const [cuatrimestre, setCuatrimestre] = useState<string>("1")
   
   const loadExpediente = React.useCallback(async () => {
     if (!id) return
@@ -62,6 +65,15 @@ const EditarExpedientePage: React.FC = () => {
       }
 
       setFormData(data)
+      
+      // Determinar cuatrimestre basado en la fecha
+      if (data.FECHA) {
+        const mes = new Date(data.FECHA).getMonth() + 1; // getMonth() es base-0
+        if (mes <= 4) setCuatrimestre("1");
+        else if (mes <= 8) setCuatrimestre("2");
+        else setCuatrimestre("3");
+      }
+      
     } catch (error) {
       toast.error('Error al cargar el expediente')
       console.error('Error al cargar el expediente:', error)
@@ -74,7 +86,14 @@ const EditarExpedientePage: React.FC = () => {
   const loadMunicipios = async () => {
     try {
       const data = await getMunicipios()
-      setMunicipios(data.data || [])
+      if (Array.isArray(data)) {
+        setMunicipios(data)
+      } else if (data && typeof data === 'object' && 'data' in data && Array.isArray(data.data)) {
+        setMunicipios(data.data)
+      } else {
+        console.error('Formato de datos de municipios inesperado:', data)
+        setMunicipios([])
+      }
     } catch (error) {
       toast.error('Error al cargar municipios')
       console.error('Error al cargar municipios:', error)
@@ -121,7 +140,10 @@ const EditarExpedientePage: React.FC = () => {
     
     setIsLoading(true)
     try {
-      await updateExpediente(formData.ID.toString(), formData)
+      await updateExpediente(formData.ID.toString(), {
+        ...formData,
+        CUATRI: parseInt(cuatrimestre, 10)
+      })
       toast.success('Expediente actualizado correctamente')
       navigate(`/expedientes/${formData.ID}`)
     } catch (error) {
@@ -160,148 +182,203 @@ const EditarExpedientePage: React.FC = () => {
       
       <Card>
         <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Input
-              label="Expediente"
-              name="EXPEDIENTE"
-              value={formData.EXPEDIENTE}
-              onChange={handleInputChange}
-              placeholder="Código de Expediente"
-              disabled={true}
-            />
-            
-            <Input
-              label="DNI"
-              name="DNI"
-              value={formData.DNI}
-              onChange={handleInputChange}
-              placeholder="Introducir DNI de la persona"
-              required
-            />
-            
-            <Input
-              label="Fecha"
-              name="FECHA"
-              type="date"
-              value={formData.FECHA?.toString()}
-              onChange={handleInputChange}
-              required
-            />
-            
-            <Input
-              label="Lugar"
-              name="LUGAR"
-              value={formData.LUGAR}
-              onChange={handleInputChange}
-              placeholder="Lugar"
-            />
-            
-            <Input
-              label="Localidad"
-              name="LOCALIDAD"
-              value={formData.LOCALIDAD}
-              onChange={handleInputChange}
-              placeholder="Localidad"
-            />
-            
-            <Select
-              label="Municipio"
-              name="ID_MUN"
-              value={formData.ID_MUN?.toString() || ''}
-              onChange={(value) => handleSelectChange('ID_MUN', value)}
-              options={[
-                { label: 'Seleccione un municipio', value: '' },
-                ...(Array.isArray(municipios) ? municipios.map((municipio) => ({
-                  label: municipio.MUNICIPIO,
-                  value: municipio.ID_MUN.toString(),
-                })) : []),
-              ]}
-              required
-            />
-            
-            <Input
-              label="Contador a Nombre de"
-              name="CONT_NOMBRE"
-              value={formData.CONT_NOMBRE}
-              onChange={handleInputChange}
-              placeholder="Nombre en el contador"
-            />
-            
-            <Input
-              label="Nº Póliza"
-              name="CONT_POLIZA"
-              value={formData.CONT_POLIZA}
-              onChange={handleInputChange}
-              placeholder="Número de póliza"
-            />
-            
-            <Input
-              label="Técnico"
-              name="TECNICO"
-              value={formData.TECNICO}
-              onChange={handleInputChange}
-              placeholder="Nombre del técnico"
-            />
-            
-            <Input
-              label="Fecha de Informe"
-              name="FECHA_I"
-              type="date"
-              value={formData.FECHA_I?.toString()}
-              onChange={handleInputChange}
-            />
-            
-            <Input
-              label="Días"
-              name="DIAS"
-              type="number"
-              value={formData.DIAS?.toString()}
-              onChange={handleInputChange}
-              min="0"
-            />
-            
-            <div className="col-span-1 md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Observaciones
-              </label>
-              <textarea
-                name="OBSER"
-                rows={3}
-                value={formData.OBSER || ''}
+          <Tabs 
+            tabs={[
+              { id: 'datos-basicos', label: 'Datos Básicos' },
+              { id: 'informe-tecnico', label: 'Informe Técnico' },
+              { id: 'materias', label: 'Materias y Conceptos' }
+            ]}
+          >
+            {/* Pestaña de datos básicos */}
+            <div id="datos-basicos" className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Input
+                label="Expediente"
+                name="EXPEDIENTE"
+                value={formData.EXPEDIENTE}
                 onChange={handleInputChange}
-                placeholder="Observaciones"
-                className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                placeholder="Código de Expediente"
+                disabled={true}
               />
+              
+              <Input
+                label="DNI"
+                name="DNI"
+                value={formData.DNI}
+                onChange={handleInputChange}
+                placeholder="Introducir DNI de la persona"
+                required
+              />
+              
+              <Input
+                label="Fecha"
+                name="FECHA"
+                type="date"
+                value={formData.FECHA?.toString() || ''}
+                onChange={handleInputChange}
+                required
+              />
+              
+              <Input
+                label="Lugar"
+                name="LUGAR"
+                value={formData.LUGAR || ''}
+                onChange={handleInputChange}
+                placeholder="Lugar"
+              />
+              
+              <Input
+                label="Localidad"
+                name="LOCALIDAD"
+                value={formData.LOCALIDAD || ''}
+                onChange={handleInputChange}
+                placeholder="Localidad"
+              />
+              
+              <Select
+                label="Municipio"
+                name="ID_MUN"
+                value={formData.ID_MUN?.toString() || ''}
+                onChange={(value) => handleSelectChange('ID_MUN', value)}
+                options={[
+                  { label: 'Seleccione un municipio', value: '' },
+                  ...(Array.isArray(municipios) ? municipios.map((municipio) => ({
+                    label: municipio.MUNICIPIO,
+                    value: municipio.ID_MUN.toString(),
+                  })) : []),
+                ]}
+                required
+              />
+              
+              <Input
+                label="Contador a Nombre de"
+                name="CONT_NOMBRE"
+                value={formData.CONT_NOMBRE || ''}
+                onChange={handleInputChange}
+                placeholder="Nombre en el contador"
+              />
+              
+              <Input
+                label="Nº Póliza"
+                name="CONT_POLIZA"
+                value={formData.CONT_POLIZA || ''}
+                onChange={handleInputChange}
+                placeholder="Número de póliza"
+              />
+              
+              <div className="col-span-1 md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Observaciones
+                </label>
+                <textarea
+                  name="OBSER"
+                  rows={3}
+                  value={formData.OBSER || ''}
+                  onChange={handleInputChange}
+                  placeholder="Observaciones"
+                  className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                />
+              </div>
             </div>
             
-            <div className="col-span-1 md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Observaciones Técnicas
-              </label>
-              <textarea
-                name="OB_TEC"
-                rows={3}
-                value={formData.OB_TEC || ''}
+            {/* Pestaña de informe técnico */}
+            <div id="informe-tecnico" className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Input
+                label="Técnico"
+                name="TECNICO"
+                value={formData.TECNICO || ''}
                 onChange={handleInputChange}
-                placeholder="Observaciones técnicas"
-                className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                placeholder="Nombre del técnico"
               />
+              
+              <Input
+                label="Fecha de Informe"
+                name="FECHA_I"
+                type="date"
+                value={formData.FECHA_I?.toString() || ''}
+                onChange={handleInputChange}
+              />
+              
+              <Input
+                label="Días"
+                name="DIAS"
+                type="number"
+                value={formData.DIAS?.toString() || '0'}
+                onChange={handleInputChange}
+                min="0"
+              />
+              
+              <Select
+                label="Cuatrimestre"
+                value={cuatrimestre}
+                onChange={(value) => setCuatrimestre(value)}
+                options={[
+                  { label: '1er Cuatrimestre', value: '1' },
+                  { label: '2º Cuatrimestre', value: '2' },
+                  { label: '3er Cuatrimestre', value: '3' }
+                ]}
+              />
+              
+              <div className="col-span-1 md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Observaciones Técnicas
+                </label>
+                <textarea
+                  name="OB_TEC"
+                  rows={3}
+                  value={formData.OB_TEC || ''}
+                  onChange={handleInputChange}
+                  placeholder="Observaciones técnicas"
+                  className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                />
+              </div>
+              
+              <div className="col-span-1 md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Texto del Informe
+                </label>
+                <textarea
+                  name="TXT_INFORME"
+                  rows={3}
+                  value={formData.TXT_INFORME || ''}
+                  onChange={handleInputChange}
+                  placeholder="Texto del informe"
+                  className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                />
+              </div>
             </div>
             
-            <div className="col-span-1 md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Texto del Informe
-              </label>
-              <textarea
-                name="TXT_INFORME"
-                rows={3}
-                value={formData.TXT_INFORME || ''}
-                onChange={handleInputChange}
-                placeholder="Texto del informe"
-                className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
-              />
+            {/* Pestaña de materias y conceptos */}
+            <div id="materias" className="space-y-6">
+              <div className="mb-4">
+                <h3 className="font-medium text-gray-700 dark:text-gray-300">Conceptos del Expediente</h3>
+                <p className="text-sm text-gray-500">Añada materias y conceptos al expediente</p>
+              </div>
+              
+              <table className="min-w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md">
+                <thead className="bg-gray-100 dark:bg-gray-700">
+                  <tr>
+                    <th className="py-2 px-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Concepto</th>
+                    <th className="py-2 px-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Multi/Mini</th>
+                    <th className="py-2 px-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Cant.</th>
+                    <th className="py-2 px-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Inf.</th>
+                    <th className="py-2 px-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Desde</th>
+                    <th className="py-2 px-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Hasta</th>
+                    <th className="py-2 px-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Cultivo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="py-2 px-3" colSpan={7}>
+                      <div className="text-center py-4 text-gray-500">
+                        Para añadir o editar conceptos, guarde primero los cambios básicos del expediente
+                        y luego acceda a la vista detallada del expediente.
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-          </div>
+          </Tabs>
           
           <div className="mt-6 flex justify-end space-x-3">
             <Button
