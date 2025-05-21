@@ -92,6 +92,24 @@ axiosInstance.interceptors.response.use(
   }
 );
 
+// Añadir un interceptor para formatear datos automáticamente
+axiosInstance.interceptors.request.use(
+  (config) => {
+    // Solo para requests de tipo PATCH o POST
+    if ((config.method === 'patch' || config.method === 'post') && config.data) {
+      config.data = formatearDatosParaAPI(config.data);
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Función de utilidad para formatear datos
+function formatearDatosParaAPI(data: any) {
+  // Implementar la lógica de formateo aquí
+  return data;
+}
+
 // Métodos de API simplificados
 const api = {
   get: async <T>(url: string, params?: Record<string, unknown>): Promise<T> => {
@@ -104,9 +122,8 @@ const api = {
     return response.data;
   },
   
-  patch: async <T>(url: string, data?: unknown): Promise<T> => {
-    const response = await axiosInstance.patch<T>(url, data);
-    return response.data;
+  patch<T = unknown>(url: string, data?: unknown): Promise<T> {
+    return axiosInstance.patch<T>(url, data).then(res => res.data);
   },
   
   delete: async <T>(url: string): Promise<T> => {
@@ -114,5 +131,27 @@ const api = {
     return response.data;
   }
 };
+
+// Añadir este interceptor para depuración
+
+axiosInstance.interceptors.request.use(
+  (config) => {
+    if (config.method === 'post' || config.method === 'patch') {
+      console.log(`[${config.method.toUpperCase()}] ${config.url}`, config.data);
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response) {
+      console.error(`Error ${error.response.status}: ${error.config.url}`, error.response.data);
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default api;

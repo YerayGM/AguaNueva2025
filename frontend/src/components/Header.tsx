@@ -22,14 +22,14 @@ const Header: React.FC = () => {
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
       isScrolled 
-        ? 'bg-gray-900/95 backdrop-blur-md shadow-lg shadow-blue-900/10 py-2' 
-        : 'bg-gray-900 py-4'
+        ? 'bg-gray-900/95 dark:bg-gray-900/95 backdrop-blur-md shadow-lg shadow-emerald-900/10 py-2' 
+        : 'bg-gray-900 dark:bg-gray-900 py-4'
     }`}>
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-3 group">
             <div className="relative">
-              <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-md group-hover:bg-blue-500/30 transition-all duration-300"></div>
+              <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-md group-hover:bg-emerald-500/30 transition-all duration-300"></div>
               <img 
                 src="/logo.png" 
                 alt="Agua Nueva" 
@@ -38,7 +38,7 @@ const Header: React.FC = () => {
             </div>
             <div>
               <h1 className="text-xl font-bold text-white tracking-tight">
-                <span className="text-blue-400">Agua</span> Nueva 2025
+                <span className="text-emerald-400">Agua</span> Nueva 2025
               </h1>
               <p className="text-xs text-gray-400">Cabildo de Fuerteventura</p>
             </div>
@@ -52,7 +52,7 @@ const Header: React.FC = () => {
                   to="/" 
                   className={`py-2 px-4 rounded-lg transition-all duration-300 flex items-center space-x-1 ${
                     isActive('/') 
-                      ? 'bg-blue-600/20 text-blue-300 border border-blue-500/30' 
+                      ? 'bg-emerald-600/20 text-emerald-300 border border-emerald-500/30' 
                       : 'text-gray-300 hover:bg-gray-800/80 border border-transparent'
                   }`}
                 >
@@ -67,7 +67,7 @@ const Header: React.FC = () => {
                   to="/datos-personales" 
                   className={`py-2 px-4 rounded-lg transition-all duration-300 flex items-center space-x-1 ${
                     isActive('/datos-personales') 
-                      ? 'bg-blue-600/20 text-blue-300 border border-blue-500/30' 
+                      ? 'bg-emerald-600/20 text-emerald-300 border border-emerald-500/30' 
                       : 'text-gray-300 hover:bg-gray-800/80 border border-transparent'
                   }`}
                 >
@@ -82,7 +82,7 @@ const Header: React.FC = () => {
                   to="/expedientes" 
                   className={`py-2 px-4 rounded-lg transition-all duration-300 flex items-center space-x-1 ${
                     isActive('/expedientes') 
-                      ? 'bg-blue-600/20 text-blue-300 border border-blue-500/30' 
+                      ? 'bg-emerald-600/20 text-emerald-300 border border-emerald-500/30' 
                       : 'text-gray-300 hover:bg-gray-800/80 border border-transparent'
                   }`}
                 >
@@ -95,7 +95,7 @@ const Header: React.FC = () => {
               <li>
                 <Link 
                   to="/expedientes/nuevo"
-                  className="ml-2 bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-500 text-white py-2 px-4 rounded-lg transition-all duration-300 flex items-center space-x-1 shadow-md shadow-blue-900/20"
+                  className="ml-2 bg-gradient-to-r from-emerald-700 to-emerald-600 hover:from-emerald-600 hover:to-emerald-500 text-white py-2 px-4 rounded-lg transition-all duration-300 flex items-center space-x-1 shadow-md shadow-emerald-900/20"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -134,7 +134,7 @@ const Header: React.FC = () => {
                 to="/" 
                 className={`flex items-center space-x-3 py-2 px-3 rounded-md transition-all duration-300 ${
                   isActive('/') 
-                    ? 'bg-blue-600/20 text-blue-300 border border-blue-500/30' 
+                    ? 'bg-emerald-600/20 text-emerald-300 border border-emerald-500/30' 
                     : 'text-gray-300 hover:bg-gray-700 border border-transparent'
                 }`}
                 onClick={() => setIsMenuOpen(false)}
@@ -150,7 +150,7 @@ const Header: React.FC = () => {
                 to="/datos-personales" 
                 className={`flex items-center space-x-3 py-2 px-3 rounded-md transition-all duration-300 ${
                   isActive('/datos-personales') 
-                    ? 'bg-blue-600/20 text-blue-300 border border-blue-500/30' 
+                    ? 'bg-emerald-600/20 text-emerald-300 border border-emerald-500/30' 
                     : 'text-gray-300 hover:bg-gray-700 border border-transparent'
                 }`}
                 onClick={() => setIsMenuOpen(false)}
@@ -166,7 +166,7 @@ const Header: React.FC = () => {
                 to="/expedientes" 
                 className={`flex items-center space-x-3 py-2 px-3 rounded-md transition-all duration-300 ${
                   isActive('/expedientes') 
-                    ? 'bg-blue-600/20 text-blue-300 border border-blue-500/30' 
+                    ? 'bg-emerald-600/20 text-emerald-300 border border-emerald-500/30' 
                     : 'text-gray-300 hover:bg-gray-700 border border-transparent'
                 }`}
                 onClick={() => setIsMenuOpen(false)}
@@ -180,7 +180,7 @@ const Header: React.FC = () => {
             <li>
               <Link 
                 to="/expedientes/nuevo" 
-                className="flex items-center space-x-3 py-2 px-3 rounded-md transition-all duration-300 bg-gradient-to-r from-blue-700 to-blue-600 text-white"
+                className="flex items-center space-x-3 py-2 px-3 rounded-md transition-all duration-300 bg-gradient-to-r from-emerald-700 to-emerald-600 text-white"
                 onClick={() => setIsMenuOpen(false)}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

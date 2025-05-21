@@ -39,7 +39,7 @@ export async function getRecentExpedientes(limit = 3): Promise<Expediente[]> {
 // Obtener un expediente por ID - con manejo de errores mejorado
 export async function getExpedienteById(id: string): Promise<Expediente> {
   try {
-    // Cambia esta línea para usar la ruta correcta
+    // Usando la ruta correcta según la API del backend
     return await api.get<Expediente>(`/expedientes/id/${id}`);
   } catch (error) {
     console.error(`Error al obtener expediente con ID ${id}:`, error);
@@ -67,17 +67,22 @@ export async function getExpedientesByMunicipio(idMunicipio: number): Promise<Ex
   }
 }
 
-// Crear un nuevo expediente
-export async function createExpediente(expediente: Partial<Expediente>): Promise<Expediente> {
-  return api.post<Expediente>('/expedientes', expediente);
-}
+// Crear un nuevo expediente (ajusta los campos a los del backend)
+export const createExpediente = async (expedienteData: Omit<Expediente, 'ID' | 'EXPEDIENTE'>) => {
+  // No envíes ID ni EXPEDIENTE, el backend los genera
+  return api.post<Expediente>('/expedientes', expedienteData);
+};
 
 // Actualizar un expediente existente
 export async function updateExpediente(id: string, expediente: Partial<Expediente>): Promise<Expediente> {
-  return api.patch<Expediente>(`/expedientes/${id}`, expediente);
+  // El backend espera el código de expediente, no el ID numérico
+  const expedienteData = await getExpedienteById(id);
+  return api.patch<Expediente>(`/expedientes/${expedienteData.EXPEDIENTE}`, expediente);
 }
 
 // Eliminar un expediente
 export async function deleteExpediente(id: string): Promise<void> {
-  return api.delete<void>(`/expedientes/${id}`);
+  // El backend espera el código de expediente, no el ID numérico
+  const expedienteData = await getExpedienteById(id);
+  return api.delete<void>(`/expedientes/${expedienteData.EXPEDIENTE}`);
 }

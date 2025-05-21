@@ -24,11 +24,11 @@ export interface DatosPersonales {
 
 // Interfaz para expedientes
 export interface Expediente {
-  ID: number;
-  EXPEDIENTE: string;
-  HOJA: number;
+  ID?: number;
+  EXPEDIENTE?: string;
   DNI: string;
-  FECHA: string | Date;
+  HOJA: number;
+  FECHA: string;
   LUGAR: string;
   LOCALIDAD: string;
   ID_MUN: number;
@@ -36,11 +36,10 @@ export interface Expediente {
   CONT_POLIZA: string;
   OBSER: string;
   TECNICO: string;
-  FECHA_I: string | Date;
+  FECHA_I: string;
   DIAS: number;
   OB_TEC: string;
   TXT_INFORME: string;
-  DUMMY?: Date;
 }
 
 // Interfaz para datos de expedientes

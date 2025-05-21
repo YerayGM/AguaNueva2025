@@ -41,6 +41,12 @@ const NuevoExpedientePage: React.FC = () => {
   // Validation state
   const [dniError, setDniError] = useState('')
   
+  // Estado inicial para el expediente
+  const [expedienteData, setExpedienteData] = useState<Partial<Expediente>>({
+    ID_ESTADO: 1, // Establecer un valor por defecto
+    FECHA_INICIO: new Date().toISOString().split('T')[0] // Fecha actual como valor inicial
+  });
+  
   const loadMunicipios = async () => {
     try {
       const data = await getMunicipios()
@@ -86,53 +92,51 @@ const NuevoExpedientePage: React.FC = () => {
     }
   }
   
+  // Función para validar los datos del formulario
+  const validarFormulario = () => {
+    const errores = [];
+    
+    if (!expedienteData.DNI_CLIENTE) {
+      errores.push("El DNI del cliente es obligatorio");
+    }
+    
+    if (!expedienteData.ID_MATERIA) {
+      errores.push("Debes seleccionar una materia");
+    }
+    
+    return errores;
+  };
+  
+  // Manejar el envío del formulario
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    // Validar DNI y otros campos obligatorios
-    if (!dni) {
-      toast.error('El DNI es obligatorio')
-      return
-    }
-    
-    const isValid = datosPersona ? true : await validateDni()
-    if (!isValid) return
-    
-    if (!fecha || !idMunicipio) {
-      toast.error('Los campos de fecha y municipio son obligatorios')
-      return
-    }
-    
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
     try {
-      const expedienteData = {
+      await createExpediente({
         DNI: dni,
-        HOJA: parseInt(hoja, 10),
+        HOJA: Number(hoja),
         FECHA: fecha,
-        LUGAR: lugar || '',
-        LOCALIDAD: localidad || '',
-        ID_MUN: parseInt(idMunicipio),
-        CONT_NOMBRE: contNombre || '',
-        CONT_POLIZA: contPoliza || '',
-        OBSER: observaciones || '',
-        TECNICO: tecnico || '',
-        FECHA_I: fechaInforme,
-        DIAS: parseInt(dias),
-        OB_TEC: obsTecnicas || '',
-        TXT_INFORME: textoInforme || ''
-        // El campo EXPEDIENTE se genera en el backend
-      }
-      
-      const nuevoExpediente = await createExpediente(expedienteData)
-      toast.success('Expediente creado correctamente')
-      navigate(`/expedientes/${nuevoExpediente.ID}`)
-    } catch (error) {
-      toast.error('Error al crear el expediente')
-      console.error('Error al crear el expediente:', error)
+        LUGAR: lugar || 'Sin lugar',
+        LOCALIDAD: localidad || 'Sin localidad',
+        ID_MUN: Number(idMunicipio),
+        CONT_NOMBRE: contNombre || 'Sin nombre',
+        CONT_POLIZA: contPoliza || 'Sin póliza',
+        OBSER: observaciones || 'Sin observaciones',
+        TECNICO: tecnico || 'Sin técnico',
+        FECHA_I: fechaInforme || fecha,
+        DIAS: Number(dias) || 1,
+        OB_TEC: obsTecnicas || 'Sin observación técnica',
+        TXT_INFORME: textoInforme || 'Sin informe'
+      });
+      toast.success('Expediente creado correctamente');
+      navigate('/expedientes');
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      toast.error(err?.response?.data?.message || 'Error al crear el expediente');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
   
   const handleCancel = () => {
     navigate(-1)
@@ -242,7 +246,7 @@ const NuevoExpedientePage: React.FC = () => {
                   Observaciones
                 </label>
                 <textarea
-                  className="w-full border rounded px-3 py-2 mt-1 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border px-3 py-2 mt-1 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   value={observaciones}
                   onChange={(e) => setObservaciones(e.target.value)}
                   placeholder="Observaciones generales"
@@ -291,7 +295,7 @@ const NuevoExpedientePage: React.FC = () => {
                   Observaciones Técnicas
                 </label>
                 <textarea
-                  className="w-full border rounded px-3 py-2 mt-1 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border px-3 py-2 mt-1 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   value={obsTecnicas}
                   onChange={(e) => setObsTecnicas(e.target.value)}
                   placeholder="Observaciones técnicas"
@@ -304,7 +308,7 @@ const NuevoExpedientePage: React.FC = () => {
                   Texto del Informe
                 </label>
                 <textarea
-                  className="w-full border rounded px-3 py-2 mt-1 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border px-3 py-2 mt-1 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   value={textoInforme}
                   onChange={(e) => setTextoInforme(e.target.value)}
                   placeholder="Texto del informe técnico"

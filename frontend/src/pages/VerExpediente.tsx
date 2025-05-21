@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom' // Añadimos useNavigate
+import { useParams, Link } from 'react-router-dom'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import Table from '../components/ui/Table'
@@ -14,7 +14,6 @@ import { es } from 'date-fns/locale'
 
 const VerExpedientePage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate(); // Usar navigate para redireccionar
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null); // Estado para errores
   const [expediente, setExpediente] = useState<Expediente | null>(null)
@@ -29,7 +28,13 @@ const VerExpedientePage: React.FC = () => {
     setError(null); // Reseteamos el error
     
     try {
-      const expedienteData = await getExpedienteById(id)
+      // Convertir el ID a número si es posible
+      const numericId = parseInt(id, 10)
+      if (isNaN(numericId)) {
+        throw new Error("ID de expediente inválido")
+      }
+      
+      const expedienteData = await getExpedienteById(numericId.toString())
       setExpediente(expedienteData)
       
       // Cargar datos personales relacionados
@@ -77,7 +82,7 @@ const VerExpedientePage: React.FC = () => {
         setDatosExpedientes([])
       }
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error al cargar el expediente:', error)
       
       // Manejo específico de error 404
@@ -113,23 +118,15 @@ const VerExpedientePage: React.FC = () => {
     {
       header: 'Concepto',
       accessor: 'ID_MATERIA',
-      render: (value: unknown) => {
+      render: (value: unknown): React.ReactNode => {
         const materiaId = value as number;
         return materias[materiaId]?.MATERIA || '—';
       }
     },
     {
-      header: 'Multiplicador',
-      accessor: 'MULTIPLICADOR',
-      render: (value: unknown) => {
-        const multi = Number(value);
-        return isNaN(multi) ? '—' : multi.toFixed(2);
-      }
-    },
-    {
       header: 'Cantidad',
       accessor: 'CANTIDAD',
-      render: (value: unknown) => value || '0'
+      render: (value: unknown): React.ReactNode => value !== undefined ? String(value) : '—'
     },
     {
       header: 'Cantidad Final',
@@ -340,11 +337,9 @@ const VerExpedientePage: React.FC = () => {
       <Card 
         title="Conceptos del Expediente"
         actions={
-          <Link to={`/expedientes/${expediente.ID}/conceptos/nuevo`}>
-            <Button variant="outline" size="sm">
-              Añadir Concepto
-            </Button>
-          </Link>
+          <Button variant="outline" size="sm" onClick={() => toast.success("Funcionalidad en desarrollo")}>
+            Añadir Concepto
+          </Button>
         }
       >
         {datosExpedientes.length > 0 ? (

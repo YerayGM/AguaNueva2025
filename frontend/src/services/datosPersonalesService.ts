@@ -32,7 +32,50 @@ export async function createDatosPersonales(datos: Partial<DatosPersonales>): Pr
 
 // Actualizar datos personales existentes
 export async function updateDatosPersonales(dni: string, datos: Partial<DatosPersonales>): Promise<DatosPersonales> {
-  return api.patch<DatosPersonales>(`/datos-personales/${dni}`, datos);
+  // Crear una copia para no modificar el original
+  const datosFormateados = { ...datos };
+  
+  // Asegurar que los campos numéricos sean efectivamente números
+  if (datosFormateados.TELEFONO && typeof datosFormateados.TELEFONO === 'string') {
+    datosFormateados.TELEFONO = parseInt(datosFormateados.TELEFONO, 10) || 0;
+  }
+  
+  if (datosFormateados.NUM_ASAL && typeof datosFormateados.NUM_ASAL === 'string') {
+    datosFormateados.NUM_ASAL = parseInt(datosFormateados.NUM_ASAL, 10) || 0;
+  }
+  
+  if (datosFormateados.NUM_AGRI_PROF && typeof datosFormateados.NUM_AGRI_PROF === 'string') {
+    datosFormateados.NUM_AGRI_PROF = parseInt(datosFormateados.NUM_AGRI_PROF, 10) || 0;
+  }
+  
+  if (datosFormateados.NUM_TRAB_ASAL && typeof datosFormateados.NUM_TRAB_ASAL === 'string') {
+    datosFormateados.NUM_TRAB_ASAL = parseInt(datosFormateados.NUM_TRAB_ASAL, 10) || 0;
+  }
+  
+  if (datosFormateados.ID_MUN && typeof datosFormateados.ID_MUN === 'string') {
+    datosFormateados.ID_MUN = parseInt(datosFormateados.ID_MUN, 10) || 0;
+  }
+  
+  // Verificar y eliminar campos no esperados por el backend
+  // En ocasiones, el backend rechaza propiedades extra
+  const camposPermitidos = [
+    'DNI', 'APELLIDOS', 'NOMBREC', 'DIRECCION', 'LOCALIDAD', 'ID_MUN',
+    'TELEFONO', 'EMAIL', 'ACTIVIDADAGROPEC', 'PER_FIS', 'PER_JUR',
+    'AGRI_PRO', 'AGRI_PARCIAL', 'TRAB_ASAL', 'NUM_ASAL', 'DIS_AGRI_PROF',
+    'NUM_AGRI_PROF', 'NUM_TRAB_ASAL'
+  ];
+  
+  const datosLimpios: any = {};
+  camposPermitidos.forEach(campo => {
+    if (campo in datosFormateados) {
+      datosLimpios[campo] = datosFormateados[campo as keyof typeof datosFormateados];
+    }
+  });
+  
+  // Para depuración
+  console.log("Datos enviados al backend:", datosLimpios);
+  
+  return api.patch<DatosPersonales>(`/datos-personales/${dni}`, datosLimpios);
 }
 
 // Eliminar datos personales

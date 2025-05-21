@@ -45,7 +45,13 @@ const EditarExpedientePage: React.FC = () => {
 
     setIsLoading(true)
     try {
-      const data = await getExpedienteById(id)
+      // Convertir el ID a número si es posible
+      const numericId = parseInt(id, 10)
+      if (isNaN(numericId)) {
+        throw new Error("ID de expediente inválido")
+      }
+      
+      const data = await getExpedienteById(numericId.toString())
 
       // Formatear fechas para inputs tipo date
       if (data.FECHA) {
@@ -140,12 +146,12 @@ const EditarExpedientePage: React.FC = () => {
     
     setIsLoading(true)
     try {
-      await updateExpediente(formData.ID.toString(), {
+      await updateExpediente(id || '', {
         ...formData,
         CUATRI: parseInt(cuatrimestre, 10)
       })
       toast.success('Expediente actualizado correctamente')
-      navigate(`/expedientes/${formData.ID}`)
+      navigate(`/expedientes/${id}`)
     } catch (error) {
       toast.error('Error al actualizar el expediente')
       console.error('Error al actualizar el expediente:', error)

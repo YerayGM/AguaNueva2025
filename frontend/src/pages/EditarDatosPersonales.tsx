@@ -62,21 +62,11 @@ const EditarDatosPersonalesPage: React.FC<EditarDatosPersonalesPageProps> = ({ m
 
   const loadMunicipios = useCallback(async () => {
     try {
-      const data = await getMunicipios()
-      console.log('Datos de municipios recibidos en EditarDatosPersonales:', data)
-      // Verificar la estructura de los datos y extraer el array de municipios
-      if (data && data.data && Array.isArray(data.data)) {
-        setMunicipios(data.data)
-      } else if (Array.isArray(data)) {
-        setMunicipios(data)
-      } else {
-        console.error('Formato de datos de municipios inesperado:', data)
-        setMunicipios([])
-      }
+      const data = await getMunicipios();
+      setMunicipios(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error('Error al cargar municipios:', error)
-      toast.error('Error al cargar municipios')
-      setMunicipios([])
+      toast.error('Error al cargar municipios');
+      setMunicipios([]);
     }
   }, [])
 
@@ -133,9 +123,19 @@ const EditarDatosPersonalesPage: React.FC<EditarDatosPersonalesPageProps> = ({ m
         toast.success('Datos personales actualizados correctamente')
       }
       navigate('/datos-personales')
-    } catch (error) {
-      toast.error(`Error al ${isCreateMode ? 'crear' : 'actualizar'} los datos personales`)
-      console.error(`Error al ${isCreateMode ? 'crear' : 'actualizar'} los datos personales:`, error)
+    } catch (error: any) {
+      // Intentar extraer mensaje de error más específico
+      const errorMessage = error.response?.data?.message || 
+                          error.message || 
+                          `Error al ${isCreateMode ? 'crear' : 'actualizar'} los datos personales`;
+      
+      toast.error(errorMessage);
+      console.error(`Error al ${isCreateMode ? 'crear' : 'actualizar'} los datos personales:`, error);
+      
+      // Para depuración
+      if (error.response?.data) {
+        console.error('Detalles del error:', error.response.data);
+      }
     } finally {
       setIsLoading(false)
     }
@@ -151,6 +151,8 @@ const EditarDatosPersonalesPage: React.FC<EditarDatosPersonalesPageProps> = ({ m
       ? 'Crear Datos Personales' 
       : 'Editar Datos Personales'
   
+  const [tab, setTab] = useState<'datos-basicos' | 'informe-tecnico'>('datos-basicos')
+
   if (isLoading && !isCreateMode) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -174,243 +176,277 @@ const EditarDatosPersonalesPage: React.FC<EditarDatosPersonalesPageProps> = ({ m
       </div>
       
       <Card>
-        <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Input
-              label="DNI"
-              name="DNI"
-              value={formData.DNI}
-              onChange={handleInputChange}
-              placeholder="Introducir DNI"
-              required
-              disabled={!isCreateMode || isViewMode}
-            />
-            
-            <Input
-              label="Apellidos"
-              name="APELLIDOS"
-              value={formData.APELLIDOS}
-              onChange={handleInputChange}
-              placeholder="Apellidos"
-              required
-              disabled={isViewMode}
-            />
-            
-            <Input
-              label="Nombre"
-              name="NOMBREC"
-              value={formData.NOMBREC}
-              onChange={handleInputChange}
-              placeholder="Nombre"
-              disabled={isViewMode}
-            />
-            
-            <Input
-              label="Dirección"
-              name="DIRECCION"
-              value={formData.DIRECCION}
-              onChange={handleInputChange}
-              placeholder="Dirección"
-              disabled={isViewMode}
-            />
-            
-            <Input
-              label="Localidad"
-              name="LOCALIDAD"
-              value={formData.LOCALIDAD}
-              onChange={handleInputChange}
-              placeholder="Localidad"
-              disabled={isViewMode}
-            />
-            
-            <Select
-              label="Municipio"
-              name="ID_MUN"
-              value={formData.ID_MUN?.toString() || ''}
-              onChange={(value) => handleSelectChange('ID_MUN', value)}
-              options={[
-                { label: 'Seleccione un municipio', value: '0' },
-                ...municipios.map((municipio) => ({
-                  label: municipio.MUNICIPIO,
-                  value: municipio.ID_MUN.toString(),
-                })),
-              ]}
-              disabled={isViewMode}
-            />
-            
-            <Input
-              label="Teléfono"
-              name="TELEFONO"
-              value={formData.TELEFONO}
-              onChange={handleInputChange}
-              placeholder="Teléfono"
-              disabled={isViewMode}
-            />
-            
-            <Input
-              label="Email"
-              name="EMAIL"
-              type="email"
-              value={formData.EMAIL}
-              onChange={handleInputChange}
-              placeholder="Email"
-              required
-              disabled={isViewMode}
-            />
-            
-            <Input
-              label="Actividad Agropecuaria"
-              name="ACTIVIDADAGROPEC"
-              value={formData.ACTIVIDADAGROPEC}
-              onChange={handleInputChange}
-              placeholder="Actividad Agropecuaria"
-              disabled={isViewMode}
-            />
-            
-            <div className="col-span-1 md:col-span-2">
-              <div className="border-t border-slate-200 dark:border-slate-700 pt-4 mt-2">
-                <h3 className="text-md font-medium text-slate-800 dark:text-white mb-4">
-                  Tipo de Persona
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-center space-x-3">
-                    <Input
-                      type="checkbox"
-                      name="PER_FIS"
-                      checked={formData.PER_FIS}
-                      onChange={handleInputChange}
-                      label="Persona Física"
-                      disabled={isViewMode}
-                    />
-                  </div>
-                  
-                  <div className="flex items-center space-x-3">
-                    <Input
-                      type="checkbox"
-                      name="PER_JUR"
-                      checked={formData.PER_JUR}
-                      onChange={handleInputChange}
-                      label="Persona Jurídica"
-                      disabled={isViewMode}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="col-span-1 md:col-span-2">
-              <div className="border-t border-slate-200 dark:border-slate-700 pt-4 mt-2">
-                <h3 className="text-md font-medium text-slate-800 dark:text-white mb-4">
-                  Tipo de Actividad
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-center space-x-3">
-                    <Input
-                      type="checkbox"
-                      name="AGRI_PRO"
-                      checked={formData.AGRI_PRO}
-                      onChange={handleInputChange}
-                      label="Agricultor Profesional"
-                      disabled={isViewMode}
-                    />
-                  </div>
-                  
-                  <div className="flex items-center space-x-3">
-                    <Input
-                      type="checkbox"
-                      name="AGRI_PARCIAL"
-                      checked={formData.AGRI_PARCIAL}
-                      onChange={handleInputChange}
-                      label="Agricultor Parcial"
-                      disabled={isViewMode}
-                    />
-                  </div>
-                  
-                  <div className="flex items-center space-x-3">
-                    <Input
-                      type="checkbox"
-                      name="TRAB_ASAL"
-                      checked={formData.TRAB_ASAL}
-                      onChange={handleInputChange}
-                      label="Trabajadores Asalariados"
-                      disabled={isViewMode}
-                    />
-                  </div>
-                  
-                  <div className="flex items-center space-x-3">
-                    <Input
-                      type="checkbox"
-                      name="DIS_AGRI_PROF"
-                      checked={formData.DIS_AGRI_PROF}
-                      onChange={handleInputChange}
-                      label="Dispone de Agricultores Profesionales"
-                      disabled={isViewMode}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="col-span-1 md:col-span-2">
-              <div className="border-t border-slate-200 dark:border-slate-700 pt-4 mt-2">
-                <h3 className="text-md font-medium text-slate-800 dark:text-white mb-4">
-                  Información Adicional
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Input
-                    label="Número de Asalariados"
-                    name="NUM_ASAL"
-                    type="number"
-                    value={formData.NUM_ASAL?.toString()}
-                    onChange={handleInputChange}
-                    min="0"
-                    disabled={isViewMode}
-                  />
-                  
-                  <Input
-                    label="Número de Agricultores Profesionales"
-                    name="NUM_AGRI_PROF"
-                    type="number"
-                    value={formData.NUM_AGRI_PROF?.toString()}
-                    onChange={handleInputChange}
-                    min="0"
-                    disabled={isViewMode}
-                  />
-                  
-                  <Input
-                    label="Número de Trabajadores Asalariados"
-                    name="NUM_TRAB_ASAL"
-                    type="number"
-                    value={formData.NUM_TRAB_ASAL?.toString()}
-                    onChange={handleInputChange}
-                    min="0"
-                    disabled={isViewMode}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
+        <div className="mb-4">
+          <button 
+            type="button" 
+            onClick={() => setTab('datos-basicos')}
+            className={`px-4 py-2 rounded-l-md font-medium transition-all flex items-center justify-center space-x-2 
+            ${tab === 'datos-basicos' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-800'}`}
+          >
+            <span>Datos Básicos</span>
+          </button>
           
-          <div className="mt-6 flex justify-end space-x-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCancel}
-            >
-              {isViewMode ? 'Volver' : 'Cancelar'}
-            </Button>
+          <button 
+            type="button" 
+            onClick={() => setTab('informe-tecnico')}
+            className={`px-4 py-2 rounded-r-md font-medium transition-all flex items-center justify-center space-x-2 
+            ${tab === 'informe-tecnico' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-800'}`}
+          >
+            <span>Informe Técnico</span>
+          </button>
+        </div>
+        
+        {tab === 'datos-basicos' && (
+          <form onSubmit={handleSubmit}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Input
+                label="DNI"
+                name="DNI"
+                value={formData.DNI}
+                onChange={handleInputChange}
+                placeholder="Introducir DNI"
+                required
+                disabled={!isCreateMode || isViewMode}
+              />
+              
+              <Input
+                label="Apellidos"
+                name="APELLIDOS"
+                value={formData.APELLIDOS}
+                onChange={handleInputChange}
+                placeholder="Apellidos"
+                required
+                disabled={isViewMode}
+              />
+              
+              <Input
+                label="Nombre"
+                name="NOMBREC"
+                value={formData.NOMBREC}
+                onChange={handleInputChange}
+                placeholder="Nombre"
+                disabled={isViewMode}
+              />
+              
+              <Input
+                label="Dirección"
+                name="DIRECCION"
+                value={formData.DIRECCION}
+                onChange={handleInputChange}
+                placeholder="Dirección"
+                disabled={isViewMode}
+              />
+              
+              <Input
+                label="Localidad"
+                name="LOCALIDAD"
+                value={formData.LOCALIDAD}
+                onChange={handleInputChange}
+                placeholder="Localidad"
+                disabled={isViewMode}
+              />
+              
+              <Select
+                label="Municipio"
+                name="ID_MUN"
+                value={formData.ID_MUN?.toString() || ''}
+                onChange={(value) => handleSelectChange('ID_MUN', value)}
+                options={[
+                  { label: 'Seleccione un municipio', value: '0' },
+                  ...municipios.map((municipio) => ({
+                    label: municipio.MUNICIPIO,
+                    value: municipio.ID_MUN.toString(),
+                  })),
+                ]}
+                disabled={isViewMode}
+              />
+              
+              <Input
+                label="Teléfono"
+                name="TELEFONO"
+                value={formData.TELEFONO}
+                onChange={handleInputChange}
+                placeholder="Teléfono"
+                disabled={isViewMode}
+              />
+              
+              <Input
+                label="Email"
+                name="EMAIL"
+                type="email"
+                value={formData.EMAIL}
+                onChange={handleInputChange}
+                placeholder="Email"
+                required
+                disabled={isViewMode}
+              />
+              
+              <Input
+                label="Actividad Agropecuaria"
+                name="ACTIVIDADAGROPEC"
+                value={formData.ACTIVIDADAGROPEC}
+                onChange={handleInputChange}
+                placeholder="Actividad Agropecuaria"
+                disabled={isViewMode}
+              />
+              
+              <div className="col-span-1 md:col-span-2">
+                <div className="border-t border-slate-200 dark:border-slate-700 pt-4 mt-2">
+                  <h3 className="text-md font-medium text-slate-800 dark:text-white mb-4">
+                    Tipo de Persona
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center space-x-3">
+                      <Input
+                        type="checkbox"
+                        name="PER_FIS"
+                        checked={formData.PER_FIS}
+                        onChange={handleInputChange}
+                        label="Persona Física"
+                        disabled={isViewMode}
+                      />
+                    </div>
+                    
+                    <div className="flex items-center space-x-3">
+                      <Input
+                        type="checkbox"
+                        name="PER_JUR"
+                        checked={formData.PER_JUR}
+                        onChange={handleInputChange}
+                        label="Persona Jurídica"
+                        disabled={isViewMode}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="col-span-1 md:col-span-2">
+                <div className="border-t border-slate-200 dark:border-slate-700 pt-4 mt-2">
+                  <h3 className="text-md font-medium text-slate-800 dark:text-white mb-4">
+                    Tipo de Actividad
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center space-x-3">
+                      <Input
+                        type="checkbox"
+                        name="AGRI_PRO"
+                        checked={formData.AGRI_PRO}
+                        onChange={handleInputChange}
+                        label="Agricultor Profesional"
+                        disabled={isViewMode}
+                      />
+                    </div>
+                    
+                    <div className="flex items-center space-x-3">
+                      <Input
+                        type="checkbox"
+                        name="AGRI_PARCIAL"
+                        checked={formData.AGRI_PARCIAL}
+                        onChange={handleInputChange}
+                        label="Agricultor Parcial"
+                        disabled={isViewMode}
+                      />
+                    </div>
+                    
+                    <div className="flex items-center space-x-3">
+                      <Input
+                        type="checkbox"
+                        name="TRAB_ASAL"
+                        checked={formData.TRAB_ASAL}
+                        onChange={handleInputChange}
+                        label="Trabajadores Asalariados"
+                        disabled={isViewMode}
+                      />
+                    </div>
+                    
+                    <div className="flex items-center space-x-3">
+                      <Input
+                        type="checkbox"
+                        name="DIS_AGRI_PROF"
+                        checked={formData.DIS_AGRI_PROF}
+                        onChange={handleInputChange}
+                        label="Dispone de Agricultores Profesionales"
+                        disabled={isViewMode}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="col-span-1 md:col-span-2">
+                <div className="border-t border-slate-200 dark:border-slate-700 pt-4 mt-2">
+                  <h3 className="text-md font-medium text-slate-800 dark:text-white mb-4">
+                    Información Adicional
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Input
+                      label="Número de Asalariados"
+                      name="NUM_ASAL"
+                      type="number"
+                      value={formData.NUM_ASAL?.toString()}
+                      onChange={handleInputChange}
+                      min="0"
+                      disabled={isViewMode}
+                    />
+                    
+                    <Input
+                      label="Número de Agricultores Profesionales"
+                      name="NUM_AGRI_PROF"
+                      type="number"
+                      value={formData.NUM_AGRI_PROF?.toString()}
+                      onChange={handleInputChange}
+                      min="0"
+                      disabled={isViewMode}
+                    />
+                    
+                    <Input
+                      label="Número de Trabajadores Asalariados"
+                      name="NUM_TRAB_ASAL"
+                      type="number"
+                      value={formData.NUM_TRAB_ASAL?.toString()}
+                      onChange={handleInputChange}
+                      min="0"
+                      disabled={isViewMode}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
             
-            {!isViewMode && (
+            <div className="mt-6 flex justify-end space-x-3">
               <Button
-                type="submit"
-                variant="primary"
-                isLoading={isLoading}
+                type="button"
+                variant="outline"
+                onClick={handleCancel}
               >
-                {isCreateMode ? 'Crear' : 'Guardar Cambios'}
+                {isViewMode ? 'Volver' : 'Cancelar'}
               </Button>
-            )}
+              
+              {!isViewMode && (
+                <Button
+                  type="submit"
+                  variant="primary"
+                  isLoading={isLoading}
+                >
+                  {isCreateMode ? 'Crear' : 'Guardar Cambios'}
+                </Button>
+              )}
+            </div>
+          </form>
+        )}
+        
+        {tab === 'informe-tecnico' && (
+          <div>
+            <h2 className="text-xl font-semibold text-slate-800 dark:text-white mb-4">
+              Informe Técnico
+            </h2>
+            
+            <p className="text-slate-600 dark:text-slate-300">
+              Aquí va el contenido del informe técnico.
+            </p>
           </div>
-        </form>
+        )}
       </Card>
     </div>
   )
