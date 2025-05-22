@@ -77,7 +77,12 @@ export const createExpediente = async (expedienteData: Omit<Expediente, 'ID' | '
 export async function updateExpediente(id: string, expediente: Partial<Expediente>): Promise<Expediente> {
   // El backend espera el código de expediente, no el ID numérico
   const expedienteData = await getExpedienteById(id);
-  return api.patch<Expediente>(`/expedientes/${expedienteData.EXPEDIENTE}`, expediente);
+
+  // Elimina ID y EXPEDIENTE del objeto a enviar
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { ID, EXPEDIENTE, ...expedienteSinId } = expediente;
+
+  return api.patch<Expediente>(`/expedientes/${expedienteData.EXPEDIENTE}`, expedienteSinId);
 }
 
 // Eliminar un expediente

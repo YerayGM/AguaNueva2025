@@ -168,37 +168,61 @@ const EditarDatosPersonalesPage: React.FC<EditarDatosPersonalesPageProps> = ({ m
   }
   
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-800 dark:text-white">
+    <div className="space-y-6 animate-fadeIn">
+      <div className="flex items-center justify-between bg-gradient-to-r from-emerald-800 to-emerald-700 p-4 rounded-lg shadow-lg mb-4">
+        <h1 className="text-2xl font-bold text-white flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 mr-3 text-emerald-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
           {pageTitle}
         </h1>
       </div>
       
-      <Card>
-        <div className="mb-4">
-          <button 
-            type="button" 
-            onClick={() => setTab('datos-basicos')}
-            className={`px-4 py-2 rounded-l-md font-medium transition-all flex items-center justify-center space-x-2 
-            ${tab === 'datos-basicos' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-800'}`}
-          >
-            <span>Datos Básicos</span>
-          </button>
-          
-          <button 
-            type="button" 
-            onClick={() => setTab('informe-tecnico')}
-            className={`px-4 py-2 rounded-r-md font-medium transition-all flex items-center justify-center space-x-2 
-            ${tab === 'informe-tecnico' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-800'}`}
-          >
-            <span>Informe Técnico</span>
-          </button>
+      <Card className="border-emerald-200 dark:border-emerald-800 shadow-lg hover:shadow-xl transition-all duration-300">
+        <div className="mb-6">
+          <div className="inline-flex rounded-md shadow-sm">
+            <button 
+              type="button" 
+              onClick={() => setTab('datos-basicos')}
+              className={`px-6 py-3 rounded-l-md font-medium transition-all flex items-center justify-center space-x-2 
+              ${tab === 'datos-basicos' 
+                ? 'bg-emerald-600 text-white shadow-md' 
+                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <span>Datos Básicos</span>
+            </button>
+            
+            <button 
+              type="button" 
+              onClick={() => setTab('informe-tecnico')}
+              className={`px-6 py-3 rounded-r-md font-medium transition-all flex items-center justify-center space-x-2 
+              ${tab === 'informe-tecnico' 
+                ? 'bg-emerald-600 text-white shadow-md' 
+                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              <span>Informe Técnico</span>
+            </button>
+          </div>
         </div>
         
         {tab === 'datos-basicos' && (
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="stagger-fade">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="col-span-1 md:col-span-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-4 mb-2 shadow-inner">
+                <h3 className="text-md font-medium text-emerald-800 dark:text-emerald-300 mb-2 flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  Información Personal
+                </h3>
+              </div>
+              
               <Input
                 label="DNI"
                 name="DNI"
@@ -207,6 +231,11 @@ const EditarDatosPersonalesPage: React.FC<EditarDatosPersonalesPageProps> = ({ m
                 placeholder="Introducir DNI"
                 required
                 disabled={!isCreateMode || isViewMode}
+                icon={
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+                  </svg>
+                }
               />
               
               <Input
@@ -217,6 +246,11 @@ const EditarDatosPersonalesPage: React.FC<EditarDatosPersonalesPageProps> = ({ m
                 placeholder="Apellidos"
                 required
                 disabled={isViewMode}
+                icon={
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                }
               />
               
               <Input
@@ -226,6 +260,11 @@ const EditarDatosPersonalesPage: React.FC<EditarDatosPersonalesPageProps> = ({ m
                 onChange={handleInputChange}
                 placeholder="Nombre"
                 disabled={isViewMode}
+                icon={
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                }
               />
               
               <Input
@@ -235,6 +274,12 @@ const EditarDatosPersonalesPage: React.FC<EditarDatosPersonalesPageProps> = ({ m
                 onChange={handleInputChange}
                 placeholder="Dirección"
                 disabled={isViewMode}
+                icon={
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                }
               />
               
               <Input
@@ -244,6 +289,11 @@ const EditarDatosPersonalesPage: React.FC<EditarDatosPersonalesPageProps> = ({ m
                 onChange={handleInputChange}
                 placeholder="Localidad"
                 disabled={isViewMode}
+                icon={
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                }
               />
               
               <Select
@@ -268,6 +318,11 @@ const EditarDatosPersonalesPage: React.FC<EditarDatosPersonalesPageProps> = ({ m
                 onChange={handleInputChange}
                 placeholder="Teléfono"
                 disabled={isViewMode}
+                icon={
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7a4 4 0 014-4h10a4 4 0 014 4v10a4 4 0 01-4 4H7a4 4 0 01-4-4V7z" />
+                  </svg>
+                }
               />
               
               <Input
@@ -279,6 +334,11 @@ const EditarDatosPersonalesPage: React.FC<EditarDatosPersonalesPageProps> = ({ m
                 placeholder="Email"
                 required
                 disabled={isViewMode}
+                icon={
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12l-4 4-4-4m8-4l4 4-4 4m-8 0l-4-4 4-4" />
+                  </svg>
+                }
               />
               
               <Input
@@ -288,6 +348,11 @@ const EditarDatosPersonalesPage: React.FC<EditarDatosPersonalesPageProps> = ({ m
                 onChange={handleInputChange}
                 placeholder="Actividad Agropecuaria"
                 disabled={isViewMode}
+                icon={
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7a4 4 0 014-4h10a4 4 0 014 4v10a4 4 0 01-4 4H7a4 4 0 01-4-4V7z" />
+                  </svg>
+                }
               />
               
               <div className="col-span-1 md:col-span-2">

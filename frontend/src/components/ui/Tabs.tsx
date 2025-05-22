@@ -26,6 +26,7 @@ const Tabs: React.FC<TabsProps> = ({ tabs, children }) => {
           {tabs.map((tab) => (
             <li key={tab.id} className="mr-2">
               <button
+                type="button"
                 className={`inline-block py-2 px-4 font-medium text-sm transition-colors
                   ${activeTab === tab.id 
                     ? 'text-blue-600 dark:text-blue-500 border-b-2 border-blue-600 dark:border-blue-500' 

@@ -9,9 +9,9 @@ const Footer: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="md:col-span-2">
             <div className="flex items-center space-x-3 mb-4">
-              <div className="h-12 w-12 flex items-center justify-center bg-blue-700 rounded-md">
+              <div className="h-12 w-12 flex items-center justify-center bg-blue-200 rounded-md">
                 <img 
-                  src="/logo.png" 
+                  src="../../public/vite.svg" 
                   alt="Agua Nueva" 
                   className="h-10 w-10 object-contain" 
                 />
@@ -26,13 +26,6 @@ const Footer: React.FC = () => {
             <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-4">
               Plataforma de gestión para la subvención al agua agrícola, desarrollada por el Cabildo de Fuerteventura para optimizar recursos hídricos en el sector agrario de la isla.
             </p>
-            <div className="flex items-center space-x-3">
-              <img 
-                src="https://www.cabildofuer.es/wp-content/themes/fuerteventura/assets/img/logo-fuerteventura.png" 
-                alt="Cabildo de Fuerteventura" 
-                className="h-12 object-contain" 
-              />
-            </div>
           </div>
           
           <div></div>

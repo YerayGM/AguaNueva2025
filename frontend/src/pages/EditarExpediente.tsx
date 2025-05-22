@@ -10,6 +10,7 @@ import { getExpedienteById, updateExpediente } from '../services/expedientesServ
 import { getMunicipios } from '../services/municipiosService'
 import { toast } from 'react-hot-toast'
 import { format } from 'date-fns'
+import { updateDatosExpediente, createDatosExpediente } from '../services/datosExpedientesService'
 
 const EditarExpedientePage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
@@ -137,26 +138,45 @@ const EditarExpedientePage: React.FC = () => {
   }
   
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!formData.ID || !formData.DNI || !formData.FECHA) {
-      toast.error('Los campos ID, DNI y Fecha son obligatorios')
-      return
-    }
-    
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
     try {
-      await updateExpediente(id || '', {
-        ...formData,
-        CUATRI: parseInt(cuatrimestre, 10)
-      })
-      toast.success('Expediente actualizado correctamente')
-      navigate(`/expedientes/${id}`)
+      // 1. Actualizar expediente principal
+      await updateExpediente(id, {
+        DNI: formData.DNI,
+        HOJA: Number(formData.HOJA),
+        FECHA: formData.FECHA,
+        LUGAR: formData.LUGAR,
+        LOCALIDAD: formData.LOCALIDAD,
+        ID_MUN: Number(formData.ID_MUN),
+        CONT_NOMBRE: formData.CONT_NOMBRE,
+        CONT_POLIZA: formData.CONT_POLIZA,
+        OBSER: formData.OBSER,
+        TECNICO: formData.TECNICO,
+        FECHA_I: formData.FECHA_I,
+        DIAS: Number(formData.DIAS),
+        OB_TEC: formData.OB_TEC,
+        TXT_INFORME: formData.TXT_INFORME
+      });
+
+      // 2. Actualizar o crear conceptos/cuatrimestres asociados
+      for (const concepto of conceptos) {
+        if (concepto.ID) {
+          await updateDatosExpediente(concepto.ID, concepto);
+        } else {
+          await createDatosExpediente({
+            ...concepto,
+            EXPEDIENTE: formData.EXPEDIENTE
+          });
+        }
+      }
+
+      toast.success('Expediente y conceptos actualizados correctamente');
+      navigate(`/expedientes/${id}`);
     } catch (error) {
-      toast.error('Error al actualizar el expediente')
-      console.error('Error al actualizar el expediente:', error)
+      toast.error('Error al actualizar expediente y conceptos');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
   
