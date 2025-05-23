@@ -30,9 +30,7 @@ const ExpedientesPage: React.FC = () => {
       const data = await getMunicipios()
       console.log('Datos de municipios recibidos en Expedientes:', data)
       // Verificar la estructura de los datos y extraer el array de municipios
-      if (data && data.data && Array.isArray(data.data)) {
-        setMunicipios(data.data)
-      } else if (Array.isArray(data)) {
+      if (Array.isArray(data)) {
         setMunicipios(data)
       } else {
         console.error('Formato de datos de municipios inesperado:', data)

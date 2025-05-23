@@ -1,24 +1,26 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
 import Select from '../components/ui/Select'
 import Tabs from '../components/ui/Tabs'
-import type { Expediente, Municipio } from '../types'
+import type { Expediente, Municipio, DatosExpediente, Materia } from '../types'
 import { getExpedienteById, updateExpediente } from '../services/expedientesService'
 import { getMunicipios } from '../services/municipiosService'
 import { toast } from 'react-hot-toast'
 import { format } from 'date-fns'
-import { updateDatosExpediente, createDatosExpediente } from '../services/datosExpedientesService'
+import { updateDatosExpediente, createDatosExpediente, getDatosExpedienteByNumero } from '../services/datosExpedientesService'
+import { getMaterias } from '../services/materiasService' // Debes tener este servicio
 
 const EditarExpedientePage: React.FC = () => {
-  const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
-  
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+
   const [isLoading, setIsLoading] = useState(false)
   const [municipios, setMunicipios] = useState<Municipio[]>([])
-  
+  const [materias, setMaterias] = useState<Materia[]>([]);
+
   // Form state
   const [formData, setFormData] = useState<Partial<Expediente>>({
     ID: 0,
@@ -41,38 +43,40 @@ const EditarExpedientePage: React.FC = () => {
 
   const [cuatrimestre, setCuatrimestre] = useState<string>("1")
   
-  const loadExpediente = React.useCallback(async () => {
-    if (!id) return
+  // Estado para los conceptos asociados al expediente
+  const [conceptos, setConceptos] = useState<DatosExpediente[]>([]);
 
-    setIsLoading(true)
+  // Cargar expediente
+  const loadExpediente = useCallback(async () => {
+    setIsLoading(true);
     try {
-      // Convertir el ID a número si es posible
-      const numericId = parseInt(id, 10)
+      if (!id) return;
+      const numericId = parseInt(id, 10);
       if (isNaN(numericId)) {
-        throw new Error("ID de expediente inválido")
+        throw new Error("ID de expediente inválido");
       }
-      
-      const data = await getExpedienteById(numericId.toString())
+
+      const data = await getExpedienteById(numericId.toString());
 
       // Formatear fechas para inputs tipo date
       if (data.FECHA) {
         try {
-          data.FECHA = format(new Date(data.FECHA), 'yyyy-MM-dd')
+          data.FECHA = format(new Date(data.FECHA), 'yyyy-MM-dd');
         } catch (error) {
-          console.error('Error formateando FECHA:', error)
+          console.error('Error formateando FECHA:', error);
         }
       }
 
       if (data.FECHA_I) {
         try {
-          data.FECHA_I = format(new Date(data.FECHA_I), 'yyyy-MM-dd')
+          data.FECHA_I = format(new Date(data.FECHA_I), 'yyyy-MM-dd');
         } catch (error) {
-          console.error('Error formateando FECHA_I:', error)
+          console.error('Error formateando FECHA_I:', error);
         }
       }
 
-      setFormData(data)
-      
+      setFormData(data);
+
       // Determinar cuatrimestre basado en la fecha
       if (data.FECHA) {
         const mes = new Date(data.FECHA).getMonth() + 1; // getMonth() es base-0
@@ -80,69 +84,105 @@ const EditarExpedientePage: React.FC = () => {
         else if (mes <= 8) setCuatrimestre("2");
         else setCuatrimestre("3");
       }
-      
     } catch (error) {
-      toast.error('Error al cargar el expediente')
-      console.error('Error al cargar el expediente:', error)
-      navigate('/expedientes')
+      toast.error('Error al cargar el expediente');
+      console.error('Error al cargar el expediente:', error);
+      navigate('/expedientes');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [id, navigate])
-  
-  const loadMunicipios = async () => {
+  }, [id, navigate]);
+
+  // Cargar municipios
+  const loadMunicipios = useCallback(async () => {
     try {
-      const data = await getMunicipios()
+      const data = await getMunicipios();
       if (Array.isArray(data)) {
-        setMunicipios(data)
-      } else if (data && typeof data === 'object' && 'data' in data && Array.isArray(data.data)) {
-        setMunicipios(data.data)
+        setMunicipios(data);
+      } else if (
+        data &&
+        typeof data === 'object' &&
+        'data' in data &&
+        Array.isArray((data as { data: Municipio[] }).data)
+      ) {
+        setMunicipios((data as { data: Municipio[] }).data);
       } else {
-        console.error('Formato de datos de municipios inesperado:', data)
-        setMunicipios([])
+        console.error('Formato de datos de municipios inesperado:', data);
+        setMunicipios([]);
       }
+    } catch {
+      setMunicipios([]);
+    }
+  }, []);
+
+  // Cargar materias
+  const loadMaterias = useCallback(async () => {
+    try {
+      const data = await getMaterias();
+      if (Array.isArray(data)) {
+        setMaterias(data);
+      } else {
+        setMaterias([]);
+      }
+    } catch {
+      setMaterias([]);
+    }
+  }, []);
+
+  // Cargar conceptos
+  const loadConceptos = useCallback(async () => {
+    if (!formData.EXPEDIENTE) return;
+    try {
+      const data = await getDatosExpedienteByNumero(formData.EXPEDIENTE);
+      setConceptos(Array.isArray(data) ? data : []);
     } catch (error) {
-      toast.error('Error al cargar municipios')
-      console.error('Error al cargar municipios:', error)
+      // @ts-expect-error: error may not have response property
+      if (error?.response && error.response.status === 404) {
+        setConceptos([]);
+      } else {
+        toast.error('Error al cargar conceptos');
+        setConceptos([]);
+      }
     }
-  }
-  
+  }, [formData.EXPEDIENTE]);
+
   useEffect(() => {
-    loadMunicipios()
+    loadMunicipios();
+    loadMaterias();
     if (id) {
-      loadExpediente()
+      loadExpediente();
     }
-  }, [id, loadExpediente])
+    // eslint-disable-next-line
+  }, [id, loadExpediente, loadMunicipios, loadMaterias]);
+
+  useEffect(() => {
+    if (formData.EXPEDIENTE) {
+      loadConceptos();
+    }
+  }, [formData.EXPEDIENTE, loadConceptos]);
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target as HTMLInputElement
-    
-    if (type === 'number') {
-      setFormData({
-        ...formData,
-        [name]: value === '' ? 0 : parseInt(value, 10),
-      })
-    } else {
-      setFormData({
-        ...formData,
-        [name]: value,
-      })
-    }
-  }
-  
+    const { name, value, type } = e.target as HTMLInputElement;
+    setFormData({
+      ...formData,
+      [name]: type === 'number' ? (value === '' ? 0 : parseInt(value, 10)) : value,
+    });
+  };
+
   const handleSelectChange = (name: string, value: string) => {
     setFormData({
       ...formData,
       [name]: value === '' ? 0 : parseInt(value, 10),
-    })
-  }
-  
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
       // 1. Actualizar expediente principal
-      await updateExpediente(id, {
+      if (!id) throw new Error('ID de expediente no definido');
+      await updateExpediente(id as string, {
         DNI: formData.DNI,
         HOJA: Number(formData.HOJA),
         FECHA: formData.FECHA,
@@ -173,17 +213,14 @@ const EditarExpedientePage: React.FC = () => {
 
       toast.success('Expediente y conceptos actualizados correctamente');
       navigate(`/expedientes/${id}`);
-    } catch (error) {
+    } catch {
       toast.error('Error al actualizar expediente y conceptos');
     } finally {
       setIsLoading(false);
     }
-  }
-  
-  const handleCancel = () => {
-    navigate(-1)
-  }
-  
+  };
+
+
   if (isLoading && !formData.EXPEDIENTE) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -195,9 +232,13 @@ const EditarExpedientePage: React.FC = () => {
           <p className="mt-3 text-slate-600 dark:text-slate-300">Cargando expediente...</p>
         </div>
       </div>
-    )
+    );
   }
-  
+
+  const handleCancel = () => {
+    navigate('/expedientes');
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -372,40 +413,50 @@ const EditarExpedientePage: React.FC = () => {
                 />
               </div>
             </div>
-            
-            {/* Pestaña de materias y conceptos */}
-            <div id="materias" className="space-y-6">
-              <div className="mb-4">
-                <h3 className="font-medium text-gray-700 dark:text-gray-300">Conceptos del Expediente</h3>
-                <p className="text-sm text-gray-500">Añada materias y conceptos al expediente</p>
-              </div>
-              
-              <table className="min-w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md">
-                <thead className="bg-gray-100 dark:bg-gray-700">
+            <div className="mb-4">
+              <h3 className="font-medium text-gray-700 dark:text-gray-300">Conceptos del Expediente</h3>
+              {/* Aquí puedes añadir un botón para añadir conceptos si implementas la función */}
+              {/* <Button onClick={() => setShowAddConcepto(true)}>
+                Añadir Concepto/Materia
+              </Button> */}
+              <table className="min-w-full divide-y divide-gray-200 mt-2">
+                <thead>
                   <tr>
-                    <th className="py-2 px-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Concepto</th>
-                    <th className="py-2 px-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Multi/Mini</th>
-                    <th className="py-2 px-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Cant.</th>
-                    <th className="py-2 px-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Inf.</th>
-                    <th className="py-2 px-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Desde</th>
-                    <th className="py-2 px-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Hasta</th>
-                    <th className="py-2 px-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Cultivo</th>
+                    <th>Concepto</th>
+                    <th>Multi</th>
+                    <th>Mini.</th>
+                    <th>Cant.</th>
+                    <th>Inf.</th>
+                    <th>Desde</th>
+                    <th>Hasta</th>
+                    <th>PO</th>
+                    <th>PA</th>
+                    <th>RC</th>
+                    <th>Cultivo</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td className="py-2 px-3" colSpan={7}>
-                      <div className="text-center py-4 text-gray-500">
-                        Para añadir o editar conceptos, guarde primero los cambios básicos del expediente
-                        y luego acceda a la vista detallada del expediente.
-                      </div>
-                    </td>
-                  </tr>
+                  {conceptos.map((concepto: DatosExpediente, idx: number) => (
+                    <tr key={concepto.ID || idx}>
+                      <td>
+                        {materias.find((m: Materia) => m.ID === concepto.ID_MATERIA)?.TIPO} - {materias.find((m: Materia) => m.ID === concepto.ID_MATERIA)?.MATERIA}
+                      </td>
+                      <td>{concepto.MULTIPLICADOR}</td>
+                      <td>{concepto.MINIMO}</td>
+                      <td>{concepto.CANTIDAD}</td>
+                      <td>{concepto.CANTIDAD_I}</td>
+                      <td>{concepto.DESDE ? new Date(concepto.DESDE).toLocaleDateString() : ''}</td>
+                      <td>{concepto.HASTA ? new Date(concepto.HASTA).toLocaleDateString() : ''}</td>
+                      <td>{concepto.POLIGONO}</td>
+                      <td>{concepto.PARCELA}</td>
+                      <td>{concepto.RECINTO}</td>
+                      <td>{concepto.CULTIVO}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
           </Tabs>
-          
           <div className="mt-6 flex justify-end space-x-3">
             <Button
               type="button"
@@ -414,7 +465,6 @@ const EditarExpedientePage: React.FC = () => {
             >
               Cancelar
             </Button>
-            
             <Button
               type="submit"
               variant="primary"
@@ -426,7 +476,7 @@ const EditarExpedientePage: React.FC = () => {
         </form>
       </Card>
     </div>
-  )
-}
+  );
+};
 
-export default EditarExpedientePage
+export default EditarExpedientePage;

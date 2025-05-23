@@ -16,7 +16,8 @@ const Badge: React.FC<BadgeProps> = ({
     blue: 'bg-blue-900 text-blue-300',
     green: 'bg-green-900 text-green-300',
     red: 'bg-red-900 text-red-300',
-    yellow: 'bg-amber-900 text-amber-300'
+    yellow: 'bg-amber-900 text-amber-300',
+    amber: 'bg-amber-700 text-amber-300'
   }
   
   return (

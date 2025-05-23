@@ -255,22 +255,7 @@ const DatosPersonalesPage: React.FC = () => {
           columns={columns}
           data={paginatedData.map((item) => ({ ...item })) as Record<string, unknown>[]}
           isLoading={isLoading}
-          emptyMessage={
-            <div className="text-center py-8">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M12 2a10 10 0 110 20 10 10 0 010-20z" />
-              </svg>
-              <p className="mt-2 text-gray-500">No se encontraron datos personales</p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-4 hover:bg-blue-800/20"
-                onClick={handleReset}
-              >
-                Mostrar todos los registros
-              </Button>
-            </div>
-          }
+          emptyMessage="No hay datos disponibles"
           onRowClick={(row) => navigate(`/datos-personales/${row.DNI}`)}
         />
         

@@ -1,30 +1,23 @@
 import { useState } from 'react'
-import { createDatosExpediente } from '../services/datosExpedientesService'
-import type { DatosExpediente } from '../types'
 import Button from './ui/Button'
 
 interface AddConceptoModalProps {
-  expediente: DatosExpediente['EXPEDIENTE']
-  onClose: () => void
-  onConceptoAdded: () => void
+  expediente: string;
+  onClose: () => void;
+  onConceptoAdded: () => void;
 }
 
-const AddConceptoModal: React.FC<AddConceptoModalProps> = ({ expediente, onClose, onConceptoAdded }) => {
-  const [form, setForm] = useState<Partial<DatosExpediente>>({
+const AddConceptoModal = ({ expediente, onClose, onConceptoAdded }: AddConceptoModalProps) => {
+  const [form, setForm] = useState({
     EXPEDIENTE: expediente,
-    HOJA: 1,
-    ORDEN: 1,
-    ID_MATERIA: 0,
-    MULTIPLICADOR: 1,
-    MINIMO: 0,
-    MAXIMO: 0,
-    CANTIDAD: 0,
-    CANTIDAD_I: 0,
+    CONCEPTO: '',
+    MULTI_MINI: '',
+    CANTIDAD: '',
+    INF: '',
     DESDE: '',
     HASTA: '',
-    CUATRI: 1,
+    CULTIVO: ''
   })
-  const [isLoading, setIsLoading] = useState(false)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value })
@@ -32,25 +25,23 @@ const AddConceptoModal: React.FC<AddConceptoModalProps> = ({ expediente, onClose
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setIsLoading(true)
-    try {
-      await createDatosExpediente(form)
-      onConceptoAdded()
-      onClose()
-    } catch {
-      // Manejo de error
-    } finally {
-      setIsLoading(false)
-    }
+    // Aquí llamas a tu servicio para crear el concepto
+    // await createDatosExpediente(form)
+    onConceptoAdded()
+    onClose()
   }
 
   return (
     <div className="modal">
       <form onSubmit={handleSubmit}>
-        {/* Aquí pon los campos necesarios para el concepto */}
-        <input name="ID_MATERIA" value={form.ID_MATERIA} onChange={handleChange} />
-        {/* ...el resto de campos... */}
-        <Button type="submit" isLoading={isLoading}>Guardar</Button>
+        <input name="CONCEPTO" value={form.CONCEPTO} onChange={handleChange} placeholder="Concepto" />
+        <input name="MULTI_MINI" value={form.MULTI_MINI} onChange={handleChange} placeholder="Multi/Mini" />
+        <input name="CANTIDAD" value={form.CANTIDAD} onChange={handleChange} placeholder="Cantidad" />
+        <input name="INF" value={form.INF} onChange={handleChange} placeholder="Inf." />
+        <input name="DESDE" value={form.DESDE} onChange={handleChange} placeholder="Desde" type="date" />
+        <input name="HASTA" value={form.HASTA} onChange={handleChange} placeholder="Hasta" type="date" />
+        <input name="CULTIVO" value={form.CULTIVO} onChange={handleChange} placeholder="Cultivo" />
+        <Button type="submit">Guardar</Button>
         <Button type="button" onClick={onClose}>Cancelar</Button>
       </form>
     </div>

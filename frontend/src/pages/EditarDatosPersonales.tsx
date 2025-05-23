@@ -51,9 +51,8 @@ const EditarDatosPersonalesPage: React.FC<EditarDatosPersonalesPageProps> = ({ m
     try {
       const data = await getDatosPersonalesByDni(dni)
       setFormData(data)
-    } catch (error) {
+    } catch {
       toast.error('Error al cargar los datos personales')
-      console.error('Error al cargar los datos personales:', error)
       navigate('/datos-personales')
     } finally {
       setIsLoading(false)
@@ -64,7 +63,7 @@ const EditarDatosPersonalesPage: React.FC<EditarDatosPersonalesPageProps> = ({ m
     try {
       const data = await getMunicipios();
       setMunicipios(Array.isArray(data) ? data : []);
-    } catch (error) {
+    } catch {
       toast.error('Error al cargar municipios');
       setMunicipios([]);
     }
@@ -105,6 +104,19 @@ const EditarDatosPersonalesPage: React.FC<EditarDatosPersonalesPageProps> = ({ m
     })
   }
   
+  // Define a type for API error responses
+  type ApiError = {
+    response?: {
+      data?: {
+        message?: string
+        [key: string]: unknown
+      }
+      [key: string]: unknown
+    }
+    message?: string
+    [key: string]: unknown
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -123,24 +135,42 @@ const EditarDatosPersonalesPage: React.FC<EditarDatosPersonalesPageProps> = ({ m
         toast.success('Datos personales actualizados correctamente')
       }
       navigate('/datos-personales')
-    } catch (error: any) {
-      // Intentar extraer mensaje de error más específico
-      const errorMessage = error.response?.data?.message || 
-                          error.message || 
-                          `Error al ${isCreateMode ? 'crear' : 'actualizar'} los datos personales`;
-      
+    } catch (error: unknown) {
+      let errorMessage = `Error al ${isCreateMode ? 'crear' : 'actualizar'} los datos personales`;
+      const apiError = error as ApiError;
+      if (
+        apiError &&
+        typeof apiError === 'object' &&
+        apiError.response &&
+        typeof apiError.response === 'object' &&
+        apiError.response.data &&
+        typeof apiError.response.data === 'object' &&
+        apiError.response.data.message
+      ) {
+        errorMessage = apiError.response.data.message || errorMessage;
+      } else if (
+        apiError &&
+        typeof apiError === 'object' &&
+        apiError.message
+      ) {
+        errorMessage = apiError.message || errorMessage;
+      }
       toast.error(errorMessage);
       console.error(`Error al ${isCreateMode ? 'crear' : 'actualizar'} los datos personales:`, error);
-      
       // Para depuración
-      if (error.response?.data) {
-        console.error('Detalles del error:', error.response.data);
+      if (
+        apiError &&
+        typeof apiError === 'object' &&
+        apiError.response &&
+        typeof apiError.response === 'object' &&
+        apiError.response.data
+      ) {
+        console.error('Detalles del error:', apiError.response.data);
       }
     } finally {
       setIsLoading(false)
     }
   }
-  
   const handleCancel = () => {
     navigate(-1)
   }
@@ -231,11 +261,6 @@ const EditarDatosPersonalesPage: React.FC<EditarDatosPersonalesPageProps> = ({ m
                 placeholder="Introducir DNI"
                 required
                 disabled={!isCreateMode || isViewMode}
-                icon={
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
-                  </svg>
-                }
               />
               
               <Input
@@ -246,11 +271,6 @@ const EditarDatosPersonalesPage: React.FC<EditarDatosPersonalesPageProps> = ({ m
                 placeholder="Apellidos"
                 required
                 disabled={isViewMode}
-                icon={
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                }
               />
               
               <Input
@@ -260,11 +280,6 @@ const EditarDatosPersonalesPage: React.FC<EditarDatosPersonalesPageProps> = ({ m
                 onChange={handleInputChange}
                 placeholder="Nombre"
                 disabled={isViewMode}
-                icon={
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                }
               />
               
               <Input
@@ -274,12 +289,6 @@ const EditarDatosPersonalesPage: React.FC<EditarDatosPersonalesPageProps> = ({ m
                 onChange={handleInputChange}
                 placeholder="Dirección"
                 disabled={isViewMode}
-                icon={
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                }
               />
               
               <Input
@@ -289,11 +298,6 @@ const EditarDatosPersonalesPage: React.FC<EditarDatosPersonalesPageProps> = ({ m
                 onChange={handleInputChange}
                 placeholder="Localidad"
                 disabled={isViewMode}
-                icon={
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
-                }
               />
               
               <Select
@@ -318,11 +322,6 @@ const EditarDatosPersonalesPage: React.FC<EditarDatosPersonalesPageProps> = ({ m
                 onChange={handleInputChange}
                 placeholder="Teléfono"
                 disabled={isViewMode}
-                icon={
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7a4 4 0 014-4h10a4 4 0 014 4v10a4 4 0 01-4 4H7a4 4 0 01-4-4V7z" />
-                  </svg>
-                }
               />
               
               <Input
@@ -334,11 +333,6 @@ const EditarDatosPersonalesPage: React.FC<EditarDatosPersonalesPageProps> = ({ m
                 placeholder="Email"
                 required
                 disabled={isViewMode}
-                icon={
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12l-4 4-4-4m8-4l4 4-4 4m-8 0l-4-4 4-4" />
-                  </svg>
-                }
               />
               
               <Input
@@ -348,13 +342,7 @@ const EditarDatosPersonalesPage: React.FC<EditarDatosPersonalesPageProps> = ({ m
                 onChange={handleInputChange}
                 placeholder="Actividad Agropecuaria"
                 disabled={isViewMode}
-                icon={
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7a4 4 0 014-4h10a4 4 0 014 4v10a4 4 0 01-4 4H7a4 4 0 01-4-4V7z" />
-                  </svg>
-                }
               />
-              
               <div className="col-span-1 md:col-span-2">
                 <div className="border-t border-slate-200 dark:border-slate-700 pt-4 mt-2">
                   <h3 className="text-md font-medium text-slate-800 dark:text-white mb-4">

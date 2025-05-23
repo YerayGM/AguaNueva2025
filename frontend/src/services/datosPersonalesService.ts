@@ -37,7 +37,7 @@ export async function updateDatosPersonales(dni: string, datos: Partial<DatosPer
   
   // Asegurar que los campos numéricos sean efectivamente números
   if (datosFormateados.TELEFONO && typeof datosFormateados.TELEFONO === 'string') {
-    datosFormateados.TELEFONO = parseInt(datosFormateados.TELEFONO, 10) || 0;
+    datosFormateados.TELEFONO = (parseInt(datosFormateados.TELEFONO, 10) || 0).toString();
   }
   
   if (datosFormateados.NUM_ASAL && typeof datosFormateados.NUM_ASAL === 'string') {
@@ -65,10 +65,10 @@ export async function updateDatosPersonales(dni: string, datos: Partial<DatosPer
     'NUM_AGRI_PROF', 'NUM_TRAB_ASAL'
   ];
   
-  const datosLimpios: any = {};
+  const datosLimpios: Partial<DatosPersonales> = {};
   camposPermitidos.forEach(campo => {
     if (campo in datosFormateados) {
-      datosLimpios[campo] = datosFormateados[campo as keyof typeof datosFormateados];
+      datosLimpios[campo as keyof DatosPersonales] = datosFormateados[campo as keyof DatosPersonales] as any;
     }
   });
   

@@ -13,7 +13,7 @@ export interface ButtonProps {
   onClick?: () => void;
   disabled?: boolean;
   isLoading?: boolean;
-  as?: React.ComponentType<any> | string;
+  as?: React.ElementType;
   to?: string;
   icon?: React.ReactNode;
 }

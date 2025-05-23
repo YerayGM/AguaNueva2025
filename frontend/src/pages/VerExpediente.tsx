@@ -86,7 +86,11 @@ const VerExpedientePage: React.FC = () => {
       console.error('Error al cargar el expediente:', error)
       
       // Manejo específico de error 404
-      if (error.response && error.response.status === 404) {
+      interface ErrorWithResponse extends Error {
+        response?: { status?: number };
+      }
+      const err = error as ErrorWithResponse;
+      if (err.response?.status === 404) {
         setError("El expediente solicitado no existe en la base de datos");
         // No mostramos toast para 404, es una condición esperada
       } else {
@@ -131,7 +135,9 @@ const VerExpedientePage: React.FC = () => {
     {
       header: 'Cantidad Final',
       accessor: 'CANTIDAD_I',
-      render: (value: unknown) => value || '0'
+      render: (value: unknown): React.ReactNode => {
+         return (value !== undefined && value !== null) ? String(value) : '0';
+      }
     },
     {
       header: 'Desde',
