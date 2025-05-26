@@ -11,6 +11,10 @@ import { getMateriaById } from '../services/materiasService'
 import { toast } from 'react-hot-toast'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { PDFDownloadLink } from '@react-pdf/renderer';
+import { CompromisosPDF } from './PDF/CompromisosPDF';
+import { DeclaracionActividadPDF } from './PDF/DeclaracionActividadPDF';
+import { InformeTecnicoPDF } from './PDF/InformeTecnicoPDF';
 
 const VerExpedientePage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
@@ -363,6 +367,52 @@ const VerExpedientePage: React.FC = () => {
             <p className="mt-2">Puedes añadir conceptos utilizando el botón de arriba</p>
           </div>
         )}
+      </Card>
+      
+      <Card title="Documentos Generados">
+        <div className="flex gap-2">
+          <PDFDownloadLink
+            document={
+              datosPersonales
+                ? <CompromisosPDF expediente={expediente} persona={datosPersonales} />
+                : <span />
+            }
+            fileName={`Compromisos_${expediente?.EXPEDIENTE}.pdf`}
+          >
+            {({ loading }) => (
+              <Button variant="outline" disabled={loading || !datosPersonales}>
+                {loading ? 'Generando...' : 'Compromisos'}
+              </Button>
+            )}
+          </PDFDownloadLink>
+          <PDFDownloadLink
+            document={<DeclaracionActividadPDF expediente={expediente} conceptos={datosExpedientes} />}
+            fileName={`DeclaracionActividad_${expediente?.EXPEDIENTE}.pdf`}
+          >
+            {({ loading }) => (
+              <Button variant="outline" disabled={loading}>
+          <PDFDownloadLink
+            document={
+              <InformeTecnicoPDF
+                expediente={{
+                  ...expediente,
+                  ID_MUN: expediente.ID_MUN?.toString?.() ?? ''
+                }}
+              />
+            }
+            fileName={`InformeTecnico_${expediente?.EXPEDIENTE}.pdf`}
+          >
+            {({ loading }) => (
+              <Button variant="outline" disabled={loading}>
+                {loading ? 'Generando...' : 'Informe Técnico'}
+              </Button>
+            )}
+          </PDFDownloadLink>
+                {loading ? 'Generando...' : 'Informe Técnico'}
+              </Button>
+            )}
+          </PDFDownloadLink>
+        </div>
       </Card>
     </div>
   )
