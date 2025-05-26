@@ -84,4 +84,13 @@ export class DatosExpedientesController {
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.datosExpedientesService.remove(id);
   }
+
+  @Get('expediente/:numero')
+  @ApiOperation({ summary: 'Buscar registros por número de expediente' })
+  @ApiParam({ name: 'numero', description: 'Número de expediente' })
+  @ApiResponse({ status: 200, description: 'Registro encontrado', type: DatosExpediente })
+  @ApiResponse({ status: 404, description: 'Registro no encontrado' })
+  findByExpediente(@Param('numero') numero: string) {
+    return this.datosExpedientesService.findByExpediente(numero);
+  }
 }

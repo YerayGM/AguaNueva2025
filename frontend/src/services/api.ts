@@ -12,7 +12,7 @@ const ERROR_MESSAGES = {
 };
 
 // Obtener la URL base de la API
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://yeray.informaticamajada.es/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'; // https://yeray.informaticamajada.es/api/v1
 
 // Tiempo máximo de espera para solicitudes (en milisegundos)
 const REQUEST_TIMEOUT = 15000;
@@ -105,7 +105,7 @@ axiosInstance.interceptors.request.use(
 );
 
 // Función de utilidad para formatear datos
-function formatearDatosParaAPI(data: any) {
+function formatearDatosParaAPI<T>(data: T): T {
   // Implementar la lógica de formateo aquí
   return data;
 }

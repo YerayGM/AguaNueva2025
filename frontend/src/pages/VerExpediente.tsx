@@ -53,35 +53,29 @@ const VerExpedientePage: React.FC = () => {
       // Cargar datos de expedientes
       try {
         if (expedienteData && expedienteData.EXPEDIENTE) {
-          try {
-            const datosExp = await getDatosExpedienteByNumero(expedienteData.EXPEDIENTE)
-            setDatosExpedientes(Array.isArray(datosExp) ? datosExp : [])
-            
-            // Solo cargar materias si hay datos de expediente
-            if (Array.isArray(datosExp) && datosExp.length > 0) {
-              const materiasObj: Record<number, Materia> = {};
-              for (const dato of datosExp) {
-                if (!materiasObj[dato.ID_MATERIA]) {
-                  try {
-                    const materia = await getMateriaById(dato.ID_MATERIA)
-                    materiasObj[dato.ID_MATERIA] = materia
-                  } catch (error) {
-                    console.error(`Error al cargar materia ID ${dato.ID_MATERIA}:`, error)
-                  }
+          const datosExp = await getDatosExpedienteByNumero(expedienteData.EXPEDIENTE)
+          setDatosExpedientes(Array.isArray(datosExp) ? datosExp : [])
+          
+          // Solo cargar materias si hay datos de expediente
+          if (Array.isArray(datosExp) && datosExp.length > 0) {
+            const materiasObj: Record<number, Materia> = {};
+            for (const dato of datosExp) {
+              if (!materiasObj[dato.ID_MATERIA]) {
+                try {
+                  const materia = await getMateriaById(dato.ID_MATERIA)
+                  materiasObj[dato.ID_MATERIA] = materia
+                } catch (error) {
+                  console.error(`Error al cargar materia ID ${dato.ID_MATERIA}:`, error)
                 }
               }
-              setMaterias(materiasObj)
             }
-          } catch (error) {
-            console.log('No se encontraron datos de expediente asociados:', error)
-            setDatosExpedientes([])
+            setMaterias(materiasObj)
           }
         }
       } catch (error) {
-        console.error('Error general al cargar datos de expedientes:', error)
+        console.log('No se encontraron datos de expediente asociados:', error)
         setDatosExpedientes([])
       }
-      
     } catch (error: unknown) {
       console.error('Error al cargar el expediente:', error)
       
@@ -120,13 +114,16 @@ const VerExpedientePage: React.FC = () => {
   
   const datosExpedientesColumns = [
     {
-      header: 'Concepto',
+      header: 'Materia',
       accessor: 'ID_MATERIA',
       render: (value: unknown): React.ReactNode => {
         const materiaId = value as number;
         return materias[materiaId]?.MATERIA || '—';
       }
     },
+    { header: 'Multiplicador', accessor: 'MULTIPLICADOR' },
+    { header: 'Mínimo', accessor: 'MINIMO' },
+    { header: 'Máximo', accessor: 'MAXIMO' },
     {
       header: 'Cantidad',
       accessor: 'CANTIDAD',
@@ -149,6 +146,9 @@ const VerExpedientePage: React.FC = () => {
       accessor: 'HASTA',
       render: (value: unknown) => formatDate(value as string)
     },
+    { header: 'Polígono', accessor: 'POLIGONO' },
+    { header: 'Parcela', accessor: 'PARCELA' },
+    { header: 'Recinto', accessor: 'RECINTO' },
     {
       header: 'Cultivo',
       accessor: 'CULTIVO',

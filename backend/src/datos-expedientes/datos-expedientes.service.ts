@@ -87,6 +87,13 @@ export class DatosExpedientesService {
     return expedientes;
   }
 
+  async findByExpediente(numero: string) {
+    return this.datosExpedientesRepository.find({
+      where: { EXPEDIENTE: numero },
+      order: { ID: 'ASC' }
+    });
+  }
+
   async update(id: number, updateDatosExpedienteDto: UpdateDatosExpedienteDto): Promise<void> {
     const resultado = await this.datosExpedientesRepository.update(id, updateDatosExpedienteDto);
     

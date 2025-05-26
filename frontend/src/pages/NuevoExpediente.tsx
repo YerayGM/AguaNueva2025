@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
@@ -9,18 +9,41 @@ import type { Municipio, DatosPersonales } from '../types'
 import { createExpediente, getExpedientes } from '../services/expedientesService'
 import { getDatosPersonalesByDni } from '../services/datosPersonalesService'
 import { getMunicipios } from '../services/municipiosService'
+import { getMaterias } from '../services/materiasService'
+import type { Materia } from '../types'
 import { toast } from 'react-hot-toast'
 import { format } from 'date-fns'
+import { useCallback } from 'react'
+import { createDatosExpediente } from '../services/datosExpedientesService'
+
+type Concepto = {
+  ID_MATERIA: number | string
+  MULTIPLICADOR: number | string
+  MINIMO: number | string
+  MAXIMO: number | string
+  ORDEN: number | string
+  CANTIDAD: number | string
+  CANTIDAD_I: number | string
+  DESDE: string
+  HASTA: string
+  POLIGONO: number | string
+  PARCELA: number | string
+  RECINTO: string
+  CULTIVO: string
+}
 
 const NuevoExpedientePage: React.FC = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams();
   const dniParam = searchParams.get('dni');
-  
+  const location = useLocation();
+
   const [isLoading, setIsLoading] = useState(false)
   const [municipios, setMunicipios] = useState<Municipio[]>([])
   const [datosPersona, setDatosPersona] = useState<DatosPersonales | null>(null)
-  
+  const [materias, setMaterias] = useState<Materia[]>([])
+  const [conceptos, setConceptos] = useState<Concepto[]>([]);
+
   // Form state
   const [dni, setDni] = useState(dniParam || '')
   const [hoja, setHoja] = useState('1')
@@ -41,7 +64,7 @@ const NuevoExpedientePage: React.FC = () => {
 
   // Validation state
   const [dniError, setDniError] = useState('')
-  
+
   const loadMunicipios = async () => {
     try {
       const data = await getMunicipios()
@@ -51,8 +74,8 @@ const NuevoExpedientePage: React.FC = () => {
       toast.error('Error al cargar municipios')
     }
   }
-  
-  const validateDni = async () => {
+
+  const validateDni = useCallback(async () => {
     if (!dni) {
       setDniError('El DNI es obligatorio')
       return false
@@ -85,7 +108,7 @@ const NuevoExpedientePage: React.FC = () => {
       setDatosPersona(null)
       return false
     }
-  }
+  }, [dni])
   
   // Generador de código tipo AGU01299
   const generarCodigoExpediente = (ultimoNumero: number) => {
@@ -93,32 +116,76 @@ const NuevoExpedientePage: React.FC = () => {
     return `AGU${numero}`
   }
 
-  // Al montar, obtener el último expediente y generar el nuevo código
+  // Cuando abras la pantalla de nuevo expediente, llama a getExpedientes y genera el código
+  const fetchUltimoExpediente = async () => {
+    try {
+      const expedientes = await getExpedientes();
+      console.log('Expedientes:', expedientes);
+
+      let ultimoNumero = 0;
+      if (Array.isArray(expedientes) && expedientes.length > 0) {
+        // Buscar el expediente con el número más alto
+        const maxExp = expedientes.reduce((max, exp) => {
+          const match = exp.EXPEDIENTE?.match(/\d+$/);
+          const num = match ? parseInt(match[0], 10) : 0;
+          return num > max ? num : max;
+        }, 0);
+        ultimoNumero = maxExp;
+      }
+      setCodigoExpediente(generarCodigoExpediente(ultimoNumero));
+    } catch {
+      setCodigoExpediente('AGU00001');
+    }
+  };
+
   useEffect(() => {
-    async function fetchUltimoExpediente() {
-      const expedientes = await getExpedientes()
-      const maxNum = expedientes
-        .map(e => parseInt((e.EXPEDIENTE || '').replace('AGU', ''), 4))
-        .filter(n => !isNaN(n))
-        .reduce((a, b) => Math.max(a, b), 0)
-      setCodigoExpediente(generarCodigoExpediente(maxNum))
-    }
-    fetchUltimoExpediente()
-    loadMunicipios()
-    
-    // Si hay un DNI en los parámetros de la URL, cargar los datos de esa persona
-    if (dniParam) {
-      validateDni();
-    }
-  }, [dniParam, validateDni])
+    fetchUltimoExpediente();
+    loadMunicipios();
+    getMaterias().then(setMaterias);
+  }, [location.pathname]);
   
-  // Manejar el envío del formulario
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (conceptos.length === 0) {
+      toast.error('Debes añadir al menos un concepto/cuatrimestre.');
+      setIsLoading(false);
+      return;
+    }
+    if (!hoja || isNaN(Number(hoja)) || Number(hoja) < 1) {
+      toast.error('El campo HOJA es obligatorio y debe ser un número mayor que 0');
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
+    
+    const conceptosLimpios = conceptos
+      .filter(c => c.ID_MATERIA && c.CANTIDAD)
+      .map(c => ({
+        ...c,
+        ID_MATERIA: Number(c.ID_MATERIA),
+        MULTIPLICADOR: Number(c.MULTIPLICADOR) || 0,
+        MINIMO: Number(c.MINIMO) || 0,
+        MAXIMO: Number(c.MAXIMO) || 0,
+        ORDEN: Number(c.ORDEN) || 0,
+        CANTIDAD: Number(c.CANTIDAD) || 0,
+        CANTIDAD_I: Number(c.CANTIDAD_I) || 0,
+        POLIGONO: Number(c.POLIGONO) || 0,
+        PARCELA: Number(c.PARCELA) || 0,
+        RECINTO: c.RECINTO || '',
+        CULTIVO: c.CULTIVO || '',
+        DESDE: c.DESDE || '',
+        HASTA: c.HASTA || ''
+      }));
+
+    if (conceptosLimpios.length === 0) {
+      toast.error('Debes añadir al menos un concepto/cuatrimestre válido.');
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      // 1. Crear expediente principal
-      const expedienteCreado = await createExpediente({
+      const expedienteData = {
+        EXPEDIENTE: codigoExpediente,
         DNI: dni,
         HOJA: Number(hoja),
         FECHA: fecha,
@@ -133,20 +200,81 @@ const NuevoExpedientePage: React.FC = () => {
         DIAS: Number(dias) || 1,
         OB_TEC: obsTecnicas || 'Sin observación técnica',
         TXT_INFORME: textoInforme || 'Sin informe'
-      });
+      };
 
-      // Redirige a la edición del expediente recién creado
+      const expedienteCreado = await createExpediente(expedienteData);
+
+      // Supón que tienes una función createDatosExpediente en tu servicio
+      for (const concepto of conceptosLimpios) {
+        await createDatosExpediente({
+          ...concepto,
+          EXPEDIENTE: codigoExpediente,
+          HOJA: Number(hoja)
+        });
+      }
+
+      await fetchUltimoExpediente(); // <-- vuelve a calcular el código
+      setConceptos([]); // limpia conceptos si quieres
+      // limpia el resto de campos si lo necesitas
+
       navigate(`/expedientes/editar/${expedienteCreado.ID}`);
-    } catch {
-      toast.error('Error al crear expediente y conceptos');
+    } catch (error: unknown) {
+      if (typeof error === 'object' && error !== null && 'response' in error) {
+        // @ts-expect-error: response may exist in error
+        toast.error(error.response?.data?.message || 'Error al crear expediente y conceptos');
+      } else {
+        toast.error('Error al crear expediente y conceptos');
+      }
     } finally {
       setIsLoading(false);
     }
   };
-
-  const handleCancel = () => {
-    navigate(-1);
+  // Cambiar materia y autocompletar campos relacionados
+  const handleMateriaChange = (idx: number, idMateria: number) => {
+    const materia = materias.find(m => m.ID === idMateria);
+    setConceptos(prev => {
+      const updated = [...prev];
+      if (materia) {
+        updated[idx] = {
+          ...updated[idx],
+          ID_MATERIA: materia.ID,
+          MULTIPLICADOR: materia.MULTIPLICADOR,
+          MINIMO: materia.MINIMO,
+          MAXIMO: materia.MAXIMO,
+          ORDEN: materia.ORDEN,
+        };
+      }
+      return updated;
+    });
   };
+
+  // Cambiar otros campos
+  const handleConceptoChange = (idx: number, field: keyof Concepto, value: string | number) => {
+    setConceptos(prev => {
+      const updated = [...prev];
+      updated[idx] = { ...updated[idx], [field]: value };
+      return updated;
+    });
+  };
+
+  const addConcepto = () => setConceptos(prev => [...prev, {
+    ID_MATERIA: '',
+    MULTIPLICADOR: '',
+    MINIMO: '',
+    MAXIMO: '',
+    ORDEN: '',
+    CANTIDAD: '',
+    CANTIDAD_I: '',
+    DESDE: '',
+    HASTA: '',
+    POLIGONO: '',
+    PARCELA: '',
+    RECINTO: '',
+    CULTIVO: ''
+  }]);
+
+  // Eliminar fila
+  const removeConcepto = (idx: number) => setConceptos(prev => prev.filter((_, i) => i !== idx));
 
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -331,30 +459,169 @@ const NuevoExpedientePage: React.FC = () => {
             </div>
             <div id="cuatrimestres" className="col-span-1 md:col-span-2">
               <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                <div className="flex justify-between items-center px-4 py-2 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+                  <h3 className="text-base font-semibold text-gray-700 dark:text-gray-200">Conceptos del Cuatrimestre</h3>
+                  <Button
+                    type="button"
+                    onClick={addConcepto}
+                    variant="primary"
+                    className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-white"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span>Añadir concepto</span>
+                  </Button>
+                </div>
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                   <thead className="bg-gray-50 dark:bg-gray-900">
                     <tr>
-                      <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Concepto</th>
-                      <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Multi/Mini</th>
-                      <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Cant.</th>
-                      <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Inf.</th>
-                      <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Desde</th>
-                      <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Hasta</th>
-                      <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Cultivo</th>
+                      <th className="py-3 px-4 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Concepto</th>
+                      <th className="py-3 px-4 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Multi</th>
+                      <th className="py-3 px-4 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Mini</th>
+                      <th className="py-3 px-4 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Cant.</th>
+                      <th className="py-3 px-4 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Inf.</th>
+                      <th className="py-3 px-4 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Desde</th>
+                      <th className="py-3 px-4 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Hasta</th>
+                      <th className="py-3 px-4 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Polígono</th>
+                      <th className="py-3 px-4 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Parcela</th>
+                      <th className="py-3 px-4 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Recinto</th>
+                      <th className="py-3 px-4 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Cultivo</th>
+                      <th className="py-3 px-4"></th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    <tr>
-                      <td className="py-4 px-6" colSpan={7}>
-                        <div className="text-center py-8 text-gray-500 flex flex-col items-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                          <p className="text-lg mb-2">Para añadir conceptos, primero guarde el expediente</p>
-                          <p className="text-sm">Luego podrá editarlo y añadir los conceptos necesarios</p>
-                        </div>
-                      </td>
-                    </tr>
+                  <tbody>
+                    {conceptos.length === 0 ? (
+                      <tr>
+                        <td className="py-8 px-6 text-center text-gray-400" colSpan={12}>
+                          <div className="flex flex-col items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <p className="text-lg mb-2">No hay conceptos añadidos</p>
+                            <p className="text-sm">Haz clic en <b>Añadir concepto</b> para agregar uno nuevo</p>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : conceptos.map((concepto, idx) => (
+                      <tr key={idx} className="hover:bg-blue-50 dark:hover:bg-blue-900/30 transition">
+                        <td className="py-2 px-4">
+                          <Select
+                            value={concepto.ID_MATERIA || ''}
+                            onChange={val => handleMateriaChange(idx, Number(val))}
+                            options={[
+                              { label: 'Selecciona materia', value: '' },
+                              ...materias.map(m => ({
+                                label: m.MATERIA,
+                                value: m.ID
+                              }))
+                            ]}
+                            required
+                            className="w-44"
+                          />
+                        </td>
+                        <td className="py-2 px-2">
+                          <Input
+                            type="number"
+                            value={concepto.MULTIPLICADOR}
+                            onChange={e => handleConceptoChange(idx, 'MULTIPLICADOR', Number(e.target.value))}
+                            disabled
+                            className="w-16 text-center"
+                            placeholder="Multi"
+                          />
+                        </td>
+                        <td className="py-2 px-2">
+                          <Input
+                            type="number"
+                            value={concepto.MINIMO}
+                            onChange={e => handleConceptoChange(idx, 'MINIMO', Number(e.target.value))}
+                            disabled
+                            className="w-16 text-center"
+                            placeholder="Mini"
+                          />
+                        </td>
+                        <td className="py-2 px-2">
+                          <Input
+                            type="number"
+                            value={concepto.CANTIDAD}
+                            onChange={e => handleConceptoChange(idx, 'CANTIDAD', Number(e.target.value))}
+                            className="w-16 text-center"
+                            placeholder="Cantidad"
+                          />
+                        </td>
+                        <td className="py-2 px-2">
+                          <Input
+                            type="number"
+                            value={concepto.CANTIDAD_I}
+                            onChange={e => handleConceptoChange(idx, 'CANTIDAD_I', Number(e.target.value))}
+                            className="w-16 text-center"
+                            placeholder="Inf."
+                          />
+                        </td>
+                        <td className="py-2 px-2">
+                          <Input
+                            type="date"
+                            value={concepto.DESDE}
+                            onChange={e => handleConceptoChange(idx, 'DESDE', e.target.value)}
+                            className="w-32 text-center"
+                          />
+                        </td>
+                        <td className="py-2 px-2">
+                          <Input
+                            type="date"
+                            value={concepto.HASTA}
+                            onChange={e => handleConceptoChange(idx, 'HASTA', e.target.value)}
+                            className="w-32 text-center"
+                          />
+                        </td>
+                        <td className="py-2 px-2">
+                          <Input
+                            type="number"
+                            value={concepto.POLIGONO || ''}
+                            onChange={e => handleConceptoChange(idx, 'POLIGONO', Number(e.target.value))}
+                            className="w-16 text-center"
+                            placeholder="Polígono"
+                          />
+                        </td>
+                        <td className="py-2 px-2">
+                          <Input
+                            type="number"
+                            value={concepto.PARCELA || ''}
+                            onChange={e => handleConceptoChange(idx, 'PARCELA', Number(e.target.value))}
+                            className="w-16 text-center"
+                            placeholder="Parcela"
+                          />
+                        </td>
+                        <td className="py-2 px-2">
+                          <Input
+                            value={concepto.RECINTO || ''}
+                            onChange={e => handleConceptoChange(idx, 'RECINTO', e.target.value)}
+                            className="w-16 text-center"
+                            placeholder="Recinto"
+                          />
+                        </td>
+                        <td className="py-2 px-2">
+                          <Input
+                            value={concepto.CULTIVO}
+                            onChange={e => handleConceptoChange(idx, 'CULTIVO', e.target.value)}
+                            className="w-24 text-center"
+                            placeholder="Cultivo"
+                          />
+                        </td>
+                        <td className="py-2 px-2 text-center">
+                          <Button
+                            type="button"
+                            onClick={() => removeConcepto(idx)}
+                            variant="outline"
+                            className="text-red-600 border-red-200 hover:bg-red-50 dark:hover:bg-red-900/20 px-2 py-1"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
@@ -364,7 +631,7 @@ const NuevoExpedientePage: React.FC = () => {
             <Button
               type="button"
               variant="outline"
-              onClick={handleCancel}
+              onClick={() => navigate(-1)}
               className="border-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-300 px-6"
               icon={
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -394,6 +661,6 @@ const NuevoExpedientePage: React.FC = () => {
       </Card>
     </div>
   );
-}
+};
 
-export default NuevoExpedientePage
+export default NuevoExpedientePage;

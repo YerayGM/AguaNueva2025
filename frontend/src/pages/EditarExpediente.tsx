@@ -6,12 +6,13 @@ import Input from '../components/ui/Input'
 import Select from '../components/ui/Select'
 import Tabs from '../components/ui/Tabs'
 import type { Expediente, Municipio, DatosExpediente, Materia } from '../types'
-import { getExpedienteById, updateExpediente } from '../services/expedientesService'
+import { getExpedienteById } from '../services/expedientesService'
 import { getMunicipios } from '../services/municipiosService'
 import { toast } from 'react-hot-toast'
 import { format } from 'date-fns'
 import { updateDatosExpediente, createDatosExpediente, getDatosExpedienteByNumero } from '../services/datosExpedientesService'
 import { getMaterias } from '../services/materiasService' // Debes tener este servicio
+import { updateExpediente } from '../services/expedientesService'; // Asegúrate de tener este método
 
 const EditarExpedientePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -45,6 +46,19 @@ const EditarExpedientePage: React.FC = () => {
   
   // Estado para los conceptos asociados al expediente
   const [conceptos, setConceptos] = useState<DatosExpediente[]>([]);
+
+  // Manejar cambios en los conceptos
+  const handleConceptoChange = (
+    idx: number,
+    field: keyof DatosExpediente,
+    value: any
+  ) => {
+    setConceptos(prev =>
+      prev.map((concepto, i) =>
+        i === idx ? { ...concepto, [field]: value } : concepto
+      )
+    );
+  };
 
   // Cargar expediente
   const loadExpediente = useCallback(async () => {
@@ -121,7 +135,15 @@ const EditarExpedientePage: React.FC = () => {
       const data = await getMaterias();
       if (Array.isArray(data)) {
         setMaterias(data);
+      } else if (
+        data &&
+        typeof data === 'object' &&
+        'data' in data &&
+        Array.isArray((data as { data: Materia[] }).data)
+      ) {
+        setMaterias((data as { data: Materia[] }).data);
       } else {
+        console.error('Formato de datos de materias inesperado:', data);
         setMaterias([]);
       }
     } catch {
@@ -134,15 +156,20 @@ const EditarExpedientePage: React.FC = () => {
     if (!formData.EXPEDIENTE) return;
     try {
       const data = await getDatosExpedienteByNumero(formData.EXPEDIENTE);
-      setConceptos(Array.isArray(data) ? data : []);
-    } catch (error) {
-      // @ts-expect-error: error may not have response property
-      if (error?.response && error.response.status === 404) {
-        setConceptos([]);
+      if (Array.isArray(data)) {
+        setConceptos(data);
+      } else if (
+        data &&
+        typeof data === 'object' &&
+        'data' in data &&
+        Array.isArray((data as { data: DatosExpediente[] }).data)
+      ) {
+        setConceptos((data as { data: DatosExpediente[] }).data);
       } else {
-        toast.error('Error al cargar conceptos');
         setConceptos([]);
       }
+    } catch {
+      setConceptos([]);
     }
   }, [formData.EXPEDIENTE]);
 
@@ -180,46 +207,85 @@ const EditarExpedientePage: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      // 1. Actualizar expediente principal
-      if (!id) throw new Error('ID de expediente no definido');
-      await updateExpediente(id as string, {
-        DNI: formData.DNI,
-        HOJA: Number(formData.HOJA),
-        FECHA: formData.FECHA,
-        LUGAR: formData.LUGAR,
-        LOCALIDAD: formData.LOCALIDAD,
-        ID_MUN: Number(formData.ID_MUN),
-        CONT_NOMBRE: formData.CONT_NOMBRE,
-        CONT_POLIZA: formData.CONT_POLIZA,
-        OBSER: formData.OBSER,
-        TECNICO: formData.TECNICO,
-        FECHA_I: formData.FECHA_I,
-        DIAS: Number(formData.DIAS),
-        OB_TEC: formData.OB_TEC,
-        TXT_INFORME: formData.TXT_INFORME
-      });
+      // 1. Limpia los datos antes de actualizar el expediente
+      if (formData.ID) {
+        const camposValidos = [
+          'HOJA', 'DNI', 'FECHA', 'LUGAR', 'LOCALIDAD', 'ID_MUN', 'CONT_NOMBRE', 'CONT_POLIZA',
+          'OBSER', 'TECNICO', 'FECHA_I', 'DIAS', 'OB_TEC', 'TXT_INFORME'
+        ];
+        const expedienteLimpio: any = {};
+        for (const key of camposValidos) {
+          let valor = (formData as any)[key];
+          if (valor === null || valor === undefined) valor = '';
+          expedienteLimpio[key] = valor;
+        }
+        await updateExpediente(formData.ID.toString(), expedienteLimpio);
+      }
 
-      // 2. Actualizar o crear conceptos/cuatrimestres asociados
+      // 2. (Opcional) Elimina conceptos borrados (ver respuesta anterior)
+
+      // 3. Actualiza o crea los conceptos
       for (const concepto of conceptos) {
+        const conceptoLimpio = limpiarConcepto(concepto);
         if (concepto.ID) {
-          await updateDatosExpediente(concepto.ID, concepto);
+          await updateDatosExpediente(concepto.ID, conceptoLimpio);
         } else {
           await createDatosExpediente({
-            ...concepto,
+            ...conceptoLimpio,
             EXPEDIENTE: formData.EXPEDIENTE
           });
         }
       }
-
-      toast.success('Expediente y conceptos actualizados correctamente');
-      navigate(`/expedientes/${id}`);
-    } catch {
-      toast.error('Error al actualizar expediente y conceptos');
+      toast.success('Expediente actualizado correctamente');
+      navigate('/expedientes');
+    } catch (error) {
+      toast.error('Error al guardar los cambios');
+      console.error(error);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const addConcepto = () =>
+    setConceptos(prev => [
+      ...prev,
+      {
+        ID: undefined as unknown as number,
+        EXPEDIENTE: formData.EXPEDIENTE || '',
+        HOJA: 0,
+        ID_MATERIA: '',
+        MULTIPLICADOR: '',
+        MINIMO: '',
+        MAXIMO: '',
+        ORDEN: '',
+        CANTIDAD: '',
+        CANTIDAD_I: '',
+        DESDE: '',
+        HASTA: '',
+        POLIGONO: '',
+        PARCELA: '',
+        RECINTO: '',
+        CULTIVO: '',
+      } as unknown as DatosExpediente,
+    ]);
+
+  const removeConcepto = (idx: number) =>
+    setConceptos(prev => prev.filter((_, i) => i !== idx));
+
+  function limpiarConcepto(concepto: any) {
+    const limpio: any = {};
+    // Lista de campos válidos según tu DTO
+    const camposValidos = [
+      'EXPEDIENTE', 'HOJA', 'ORDEN', 'ID_MATERIA', 'MULTIPLICADOR', 'MINIMO', 'MAXIMO',
+      'CANTIDAD', 'CANTIDAD_I', 'DESDE', 'HASTA', 'POLIGONO', 'PARCELA', 'RECINTO', 'CULTIVO'
+    ];
+    for (const key of camposValidos) {
+      let valor = concepto[key];
+      if (valor === null || valor === undefined) valor = '';
+      limpio[key] = valor;
+    }
+    return limpio;
+  }
 
   if (isLoading && !formData.EXPEDIENTE) {
     return (
@@ -234,10 +300,6 @@ const EditarExpedientePage: React.FC = () => {
       </div>
     );
   }
-
-  const handleCancel = () => {
-    navigate('/expedientes');
-  };
 
   return (
     <div className="space-y-6">
@@ -416,61 +478,144 @@ const EditarExpedientePage: React.FC = () => {
             <div className="mb-4">
               <h3 className="font-medium text-gray-700 dark:text-gray-300">Conceptos del Expediente</h3>
               {/* Aquí puedes añadir un botón para añadir conceptos si implementas la función */}
-              {/* <Button onClick={() => setShowAddConcepto(true)}>
+              <Button onClick={addConcepto} type="button" variant="outline" className="mb-2">
                 Añadir Concepto/Materia
-              </Button> */}
+              </Button>
               <table className="min-w-full divide-y divide-gray-200 mt-2">
                 <thead>
                   <tr>
-                    <th>Concepto</th>
-                    <th>Multi</th>
-                    <th>Mini.</th>
-                    <th>Cant.</th>
-                    <th>Inf.</th>
+                    <th>Materia</th>
+                    <th>Multiplicador</th>
+                    <th>Mínimo</th>
+                    <th>Máximo</th>
+                    <th>Cantidad</th>
+                    <th>Cantidad I</th>
                     <th>Desde</th>
                     <th>Hasta</th>
-                    <th>PO</th>
-                    <th>PA</th>
-                    <th>RC</th>
+                    <th>Polígono</th>
+                    <th>Parcela</th>
+                    <th>Recinto</th>
                     <th>Cultivo</th>
+                    <th>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {conceptos.map((concepto: DatosExpediente, idx: number) => (
-                    <tr key={concepto.ID || idx}>
+                  {conceptos.map((concepto, idx) => (
+                    <tr key={idx}>
                       <td>
-                        {materias.find((m: Materia) => m.ID === concepto.ID_MATERIA)?.TIPO} - {materias.find((m: Materia) => m.ID === concepto.ID_MATERIA)?.MATERIA}
+                        <Select
+                          name="ID_MATERIA"
+                          value={concepto.ID_MATERIA?.toString() || ''}
+                          onChange={value => handleConceptoChange(idx, 'ID_MATERIA', value)}
+                          options={[
+                            { label: 'Seleccione', value: '' },
+                            ...(Array.isArray(materias)
+                              ? materias.map(materia => ({
+                                  label: materia.MATERIA,
+                                  value: materia.ID.toString(),
+                                }))
+                              : []),
+                          ]}
+                        />
                       </td>
-                      <td>{concepto.MULTIPLICADOR}</td>
-                      <td>{concepto.MINIMO}</td>
-                      <td>{concepto.CANTIDAD}</td>
-                      <td>{concepto.CANTIDAD_I}</td>
-                      <td>{concepto.DESDE ? new Date(concepto.DESDE).toLocaleDateString() : ''}</td>
-                      <td>{concepto.HASTA ? new Date(concepto.HASTA).toLocaleDateString() : ''}</td>
-                      <td>{concepto.POLIGONO}</td>
-                      <td>{concepto.PARCELA}</td>
-                      <td>{concepto.RECINTO}</td>
-                      <td>{concepto.CULTIVO}</td>
+                      <td>
+                        <Input
+                          value={concepto.MULTIPLICADOR || ""}
+                          onChange={e => handleConceptoChange(idx, 'MULTIPLICADOR', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <Input
+                          value={concepto.MINIMO || ""}
+                          onChange={e => handleConceptoChange(idx, 'MINIMO', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <Input
+                          value={concepto.MAXIMO || ""}
+                          onChange={e => handleConceptoChange(idx, 'MAXIMO', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <Input
+                          value={concepto.CANTIDAD || ""}
+                          onChange={e => handleConceptoChange(idx, 'CANTIDAD', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <Input
+                          value={concepto.CANTIDAD_I || ""}
+                          onChange={e => handleConceptoChange(idx, 'CANTIDAD_I', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <Input
+                          value={typeof concepto.DESDE === 'string' ? concepto.DESDE : concepto.DESDE?.toString() || ''}
+                          onChange={e => handleConceptoChange(idx, 'DESDE', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <Input
+                          value={typeof concepto.HASTA === 'string' ? concepto.HASTA : concepto.HASTA?.toString() || ''}
+                          onChange={e => handleConceptoChange(idx, 'HASTA', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <Input
+                          value={concepto.POLIGONO || ""}
+                          onChange={e => handleConceptoChange(idx, 'POLIGONO', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <Input
+                          value={concepto.PARCELA || ""}
+                          onChange={e => handleConceptoChange(idx, 'PARCELA', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <Input
+                          value={concepto.RECINTO || ""}
+                          onChange={e => handleConceptoChange(idx, 'RECINTO', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <Input
+                          value={concepto.CULTIVO || ""}
+                          onChange={e => handleConceptoChange(idx, 'CULTIVO', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <Button type="button" onClick={() => removeConcepto(idx)}>Eliminar</Button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           </Tabs>
-          <div className="mt-6 flex justify-end space-x-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCancel}
+          {/* Botón de guardar cambios */}
+          <div className="mt-8 flex justify-end">
+            <Button 
+              type="submit" 
+              className="px-6 py-2 text-base bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded shadow-lg"
+              disabled={isLoading}
             >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              isLoading={isLoading}
-            >
-              Guardar Cambios
+              {isLoading ? (
+                <span className="flex items-center">
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Guardando...
+                </span>
+              ) : (
+                <span className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Guardar Cambios
+                </span>
+              )}
             </Button>
           </div>
         </form>
