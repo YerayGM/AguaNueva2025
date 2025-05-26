@@ -2,7 +2,7 @@ import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import type { Expediente, DatosExpediente } from '../../types';
 
 const styles = StyleSheet.create({
-  page: { padding: 40, fontSize: 12, fontFamily: 'Times-Roman' },
+  page: { padding: 40, fontSize: 12, fontFamily: 'Helvetica' },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   headerBox: { border: '1pt solid #000', padding: 6, fontSize: 12, fontWeight: 'bold', minWidth: 90, textAlign: 'center' },
   expedienteBox: { border: '1pt solid #000', padding: 6, fontSize: 12, minWidth: 180, textAlign: 'left' },
