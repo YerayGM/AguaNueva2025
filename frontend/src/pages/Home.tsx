@@ -1,27 +1,32 @@
-import { useEffect, useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import { getRecentExpedientes, getExpedientes } from '../services/expedientesService'
 import type { Expediente } from '../types'
 
-const Home: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(true)
-  const [currentDateTime, setCurrentDateTime] = useState<string>('')
+const HomePage: React.FC = () => {
   const [expedientes, setExpedientes] = useState<Expediente[]>([])
-  const [stats, setStats] = useState({
-    total: 0
-  })
-  
+  const [isLoading, setIsLoading] = useState(true)
+  const [stats, setStats] = useState({ total: 0 })
+  const [currentDateTime, setCurrentDateTime] = useState('')
+  const hasFetched = useRef(false) // Usar useRef para persistir entre renders
+
   useEffect(() => {
+    // Evitar múltiples llamadas
+    if (hasFetched.current) return
+
     const loadData = async () => {
       setIsLoading(true)
+      hasFetched.current = true // Marcar inmediatamente para evitar duplicados
+      
       try {
         // Cargar expedientes recientes
         const recentExpedientes = await getRecentExpedientes(3)
+        console.log('Expedientes cargados:', recentExpedientes)
         setExpedientes(recentExpedientes)
         
-        // Cargar todos los expedientes para estadísticas
+        // Cargar todos los expedientes para estadísticas  
         const allExpedientes = await getExpedientes()
         
         // Actualizar estadísticas
@@ -31,9 +36,9 @@ const Home: React.FC = () => {
 
       } catch (error) {
         console.error('Error al cargar datos:', error)
-        // Establecer valores predeterminados en caso de error
         setExpedientes([])
         setStats({ total: 0 })
+        hasFetched.current = false // Permitir reintentar en caso de error
       } finally {
         setIsLoading(false)
       }
@@ -51,7 +56,7 @@ const Home: React.FC = () => {
       minute: '2-digit'
     }
     setCurrentDateTime(new Intl.DateTimeFormat('es-ES', options).format(now))
-  }, [])
+  }, []) // Array de dependencias vacío
   
   return (
     <div className="fade-in">
@@ -265,4 +270,4 @@ const Home: React.FC = () => {
   )
 }
 
-export default Home
+export default HomePage

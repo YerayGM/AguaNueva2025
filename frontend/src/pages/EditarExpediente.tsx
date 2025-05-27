@@ -52,7 +52,7 @@ const EditarExpedientePage: React.FC = () => {
   const handleConceptoChange = (
     idx: number,
     field: keyof DatosExpediente,
-    value: any
+    value: string | number
   ) => {
     setConceptos(prev =>
       prev.map((concepto, i) =>
@@ -217,9 +217,9 @@ const EditarExpedientePage: React.FC = () => {
           'HOJA', 'DNI', 'FECHA', 'LUGAR', 'LOCALIDAD', 'ID_MUN', 'CONT_NOMBRE', 'CONT_POLIZA',
           'OBSER', 'TECNICO', 'FECHA_I', 'DIAS', 'OB_TEC', 'TXT_INFORME'
         ];
-        const expedienteLimpio: any = {};
+        const expedienteLimpio: Record<string, string | number> = {};
         for (const key of camposValidos) {
-          let valor = (formData as any)[key];
+          let valor = (formData as Record<string, string | number | null | undefined>)[key];
           if (valor === null || valor === undefined) valor = '';
           expedienteLimpio[key] = valor;
         }
@@ -281,14 +281,14 @@ const EditarExpedientePage: React.FC = () => {
   const removeConcepto = (idx: number) =>
     setConceptos(prev => prev.filter((_, i) => i !== idx));
 
-  function limpiarConcepto(concepto: any) {
-    const limpio: any = {};
+  function limpiarConcepto(concepto: DatosExpediente) {
+    const limpio: Record<string, string | number> = {};
     const camposValidos = [
       'EXPEDIENTE', 'HOJA', 'ORDEN', 'ID_MATERIA', 'MULTIPLICADOR', 'MINIMO', 'MAXIMO',
       'CANTIDAD', 'CANTIDAD_I', 'DESDE', 'HASTA', 'POLIGONO', 'PARCELA', 'RECINTO', 'CULTIVO'
     ];
     for (const key of camposValidos) {
-      let valor = concepto[key];
+      let valor = (concepto as unknown as Record<string, string | number | null | undefined>)[key];
       if (valor === null || valor === undefined) valor = '';
       limpio[key] = valor;
     }
@@ -483,122 +483,200 @@ const EditarExpedientePage: React.FC = () => {
                 />
               </div>
             </div>
-            <div className="mb-4">
-              <h3 className="font-medium text-gray-700 dark:text-gray-300">Conceptos del Expediente</h3>
-              {/* Aquí puedes añadir un botón para añadir conceptos si implementas la función */}
-              <Button onClick={addConcepto} type="button" variant="outline" className="mb-2">
-                Añadir Concepto/Materia
-              </Button>
-              <table className="min-w-full divide-y divide-gray-200 mt-2">
-                <thead>
-                  <tr>
-                    <th>Materia</th>
-                    <th>Multiplicador</th>
-                    <th>Mínimo</th>
-                    <th>Máximo</th>
-                    <th>Cantidad</th>
-                    <th>Cantidad I</th>
-                    <th>Desde</th>
-                    <th>Hasta</th>
-                    <th>Polígono</th>
-                    <th>Parcela</th>
-                    <th>Recinto</th>
-                    <th>Cultivo</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {conceptos.map((concepto, idx) => (
-                    <tr key={idx}>
-                      <td>
-                        <Select
-                          name="ID_MATERIA"
-                          value={concepto.ID_MATERIA?.toString() || ''}
-                          onChange={value => handleConceptoChange(idx, 'ID_MATERIA', value)}
-                          options={[
-                            { label: 'Seleccione', value: '' },
-                            ...(Array.isArray(materias)
-                              ? materias.map(materia => ({
-                                  label: materia.MATERIA,
-                                  value: materia.ID.toString(),
+            {/* Pestaña de materias y conceptos */}
+            <div id="materias" className="col-span-1 md:col-span-2">
+              <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                <div className="flex justify-between items-center px-4 py-2 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+                  <h3 className="text-base font-semibold text-gray-700 dark:text-gray-200">Conceptos del Expediente</h3>
+                  <Button
+                    type="button"
+                    onClick={addConcepto}
+                    variant="primary"
+                    className="flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-700 px-3 py-1 rounded text-white"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span>Añadir concepto</span>
+                  </Button>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead className="bg-gray-50 dark:bg-gray-900">
+                      <tr>
+                        <th className="py-3 px-4 text-left text-xs font-semibold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">Concepto</th>
+                        <th className="py-3 px-4 text-left text-xs font-semibold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">Multi</th>
+                        <th className="py-3 px-4 text-left text-xs font-semibold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">Mini</th>
+                        <th className="py-3 px-4 text-left text-xs font-semibold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">Máx</th>
+                        <th className="py-3 px-4 text-left text-xs font-semibold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">Cant.</th>
+                        <th className="py-3 px-4 text-left text-xs font-semibold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">Inf.</th>
+                        <th className="py-3 px-4 text-left text-xs font-semibold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">Desde</th>
+                        <th className="py-3 px-4 text-left text-xs font-semibold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">Hasta</th>
+                        <th className="py-3 px-4 text-left text-xs font-semibold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">Polígono</th>
+                        <th className="py-3 px-4 text-left text-xs font-semibold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">Parcela</th>
+                        <th className="py-3 px-4 text-left text-xs font-semibold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">Recinto</th>
+                        <th className="py-3 px-4 text-left text-xs font-semibold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">Cultivo</th>
+                        <th className="py-3 px-4"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {conceptos.length === 0 ? (
+                        <tr>
+                          <td className="py-8 px-6 text-center text-gray-400" colSpan={13}>
+                            <div className="flex flex-col items-center">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                              <p className="text-lg mb-2">No hay conceptos añadidos</p>
+                              <p className="text-sm">Haz clic en <b>Añadir concepto</b> para agregar uno nuevo</p>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : conceptos.map((concepto, idx) => (
+                        <tr key={idx} className="hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition">
+                          <td className="py-2 px-4">
+                            <Select
+                              value={concepto.ID_MATERIA?.toString() || ''}
+                              onChange={val => {
+                                const materiaId = Number(val);
+                                const materia = materias.find(m => m.ID === materiaId);
+                                
+                                handleConceptoChange(idx, 'ID_MATERIA', val);
+                                
+                                if (materia) {
+                                  handleConceptoChange(idx, 'MULTIPLICADOR', materia.MULTIPLICADOR);
+                                  handleConceptoChange(idx, 'MINIMO', materia.MINIMO);
+                                  handleConceptoChange(idx, 'MAXIMO', materia.MAXIMO);
+                                  handleConceptoChange(idx, 'ORDEN', materia.ORDEN);
+                                }
+                              }}
+                              options={[
+                                { label: 'Selecciona materia', value: '' },
+                                ...materias.map(m => ({
+                                  label: m.MATERIA,
+                                  value: m.ID.toString()
                                 }))
-                              : []),
-                          ]}
-                        />
-                      </td>
-                      <td>
-                        <Input
-                          value={concepto.MULTIPLICADOR || ""}
-                          onChange={e => handleConceptoChange(idx, 'MULTIPLICADOR', e.target.value)}
-                        />
-                      </td>
-                      <td>
-                        <Input
-                          value={concepto.MINIMO || ""}
-                          onChange={e => handleConceptoChange(idx, 'MINIMO', e.target.value)}
-                        />
-                      </td>
-                      <td>
-                        <Input
-                          value={concepto.MAXIMO || ""}
-                          onChange={e => handleConceptoChange(idx, 'MAXIMO', e.target.value)}
-                        />
-                      </td>
-                      <td>
-                        <Input
-                          value={concepto.CANTIDAD || ""}
-                          onChange={e => handleConceptoChange(idx, 'CANTIDAD', e.target.value)}
-                        />
-                      </td>
-                      <td>
-                        <Input
-                          value={concepto.CANTIDAD_I || ""}
-                          onChange={e => handleConceptoChange(idx, 'CANTIDAD_I', e.target.value)}
-                        />
-                      </td>
-                      <td>
-                        <Input
-                          value={typeof concepto.DESDE === 'string' ? concepto.DESDE : concepto.DESDE?.toString() || ''}
-                          onChange={e => handleConceptoChange(idx, 'DESDE', e.target.value)}
-                        />
-                      </td>
-                      <td>
-                        <Input
-                          value={typeof concepto.HASTA === 'string' ? concepto.HASTA : concepto.HASTA?.toString() || ''}
-                          onChange={e => handleConceptoChange(idx, 'HASTA', e.target.value)}
-                        />
-                      </td>
-                      <td>
-                        <Input
-                          value={concepto.POLIGONO || ""}
-                          onChange={e => handleConceptoChange(idx, 'POLIGONO', e.target.value)}
-                        />
-                      </td>
-                      <td>
-                        <Input
-                          value={concepto.PARCELA || ""}
-                          onChange={e => handleConceptoChange(idx, 'PARCELA', e.target.value)}
-                        />
-                      </td>
-                      <td>
-                        <Input
-                          value={concepto.RECINTO || ""}
-                          onChange={e => handleConceptoChange(idx, 'RECINTO', e.target.value)}
-                        />
-                      </td>
-                      <td>
-                        <Input
-                          value={concepto.CULTIVO || ""}
-                          onChange={e => handleConceptoChange(idx, 'CULTIVO', e.target.value)}
-                        />
-                      </td>
-                      <td>
-                        <Button type="button" onClick={() => removeConcepto(idx)}>Eliminar</Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                              ]}
+                              required
+                              className="w-44"
+                            />
+                          </td>
+                          <td className="py-2 px-2">
+                            <Input
+                              type="number"
+                              value={concepto.MULTIPLICADOR || ''}
+                              onChange={e => handleConceptoChange(idx, 'MULTIPLICADOR', e.target.value)}
+                              disabled
+                              className="w-16 text-center"
+                              placeholder="Multi"
+                            />
+                          </td>
+                          <td className="py-2 px-2">
+                            <Input
+                              type="number"
+                              value={concepto.MINIMO || ''}
+                              onChange={e => handleConceptoChange(idx, 'MINIMO', e.target.value)}
+                              disabled
+                              className="w-16 text-center"
+                              placeholder="Mini"
+                            />
+                          </td>
+                          <td className="py-2 px-2">
+                            <Input
+                              type="number"
+                              value={concepto.MAXIMO || ''}
+                              onChange={e => handleConceptoChange(idx, 'MAXIMO', e.target.value)}
+                              disabled
+                              className="w-16 text-center"
+                              placeholder="Máx"
+                            />
+                          </td>
+                          <td className="py-2 px-2">
+                            <Input
+                              type="number"
+                              value={concepto.CANTIDAD || ''}
+                              onChange={e => handleConceptoChange(idx, 'CANTIDAD', e.target.value)}
+                              className="w-16 text-center"
+                              placeholder="Cantidad"
+                            />
+                          </td>
+                          <td className="py-2 px-2">
+                            <Input
+                              type="number"
+                              value={concepto.CANTIDAD_I || ''}
+                              onChange={e => handleConceptoChange(idx, 'CANTIDAD_I', e.target.value)}
+                              className="w-16 text-center"
+                              placeholder="Inf."
+                            />
+                          </td>
+                          <td className="py-2 px-2">
+                            <Input
+                              type="date"
+                              value={typeof concepto.DESDE === 'string' ? concepto.DESDE : concepto.DESDE?.toString() || ''}
+                              onChange={e => handleConceptoChange(idx, 'DESDE', e.target.value)}
+                              className="w-32 text-center"
+                            />
+                          </td>
+                          <td className="py-2 px-2">
+                            <Input
+                              type="date"
+                              value={typeof concepto.HASTA === 'string' ? concepto.HASTA : concepto.HASTA?.toString() || ''}
+                              onChange={e => handleConceptoChange(idx, 'HASTA', e.target.value)}
+                              className="w-32 text-center"
+                            />
+                          </td>
+                          <td className="py-2 px-2">
+                            <Input
+                              type="number"
+                              value={concepto.POLIGONO || ''}
+                              onChange={e => handleConceptoChange(idx, 'POLIGONO', e.target.value)}
+                              className="w-16 text-center"
+                              placeholder="Polígono"
+                            />
+                          </td>
+                          <td className="py-2 px-2">
+                            <Input
+                              type="number"
+                              value={concepto.PARCELA || ''}
+                              onChange={e => handleConceptoChange(idx, 'PARCELA', e.target.value)}
+                              className="w-16 text-center"
+                              placeholder="Parcela"
+                            />
+                          </td>
+                          <td className="py-2 px-2">
+                            <Input
+                              value={concepto.RECINTO || ''}
+                              onChange={e => handleConceptoChange(idx, 'RECINTO', e.target.value)}
+                              className="w-16 text-center"
+                              placeholder="Recinto"
+                            />
+                          </td>
+                          <td className="py-2 px-2">
+                            <Input
+                              value={concepto.CULTIVO || ''}
+                              onChange={e => handleConceptoChange(idx, 'CULTIVO', e.target.value)}
+                              className="w-24 text-center"
+                              placeholder="Cultivo"
+                            />
+                          </td>
+                          <td className="py-2 px-2 text-center">
+                            <Button
+                              type="button"
+                              onClick={() => removeConcepto(idx)}
+                              variant="outline"
+                              className="text-red-600 border-red-200 hover:bg-red-50 dark:hover:bg-red-900/20 px-2 py-1"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </Tabs>
           {/* Botón de guardar cambios */}

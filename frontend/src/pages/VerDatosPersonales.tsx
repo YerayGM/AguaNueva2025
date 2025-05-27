@@ -13,6 +13,7 @@ const VerDatosPersonalesPage: React.FC = () => {
   const [datos, setDatos] = useState<DatosPersonales | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [expedientes, setExpedientes] = useState<Expediente[]>([]);
+  const [isLoadingExpedientes] = useState(false);
   
   useEffect(() => {
     const fetchDatos = async () => {
@@ -263,95 +264,65 @@ const VerDatosPersonalesPage: React.FC = () => {
         </div>
       </Card>
       
-      {/* Expedientes asociados */}
-      <Card 
-        title={
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      {/* Sección de expedientes */}
+      <Card className="border-gray-800/50">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+            Expedientes Asociados
+          </h3>
+          <span className="text-sm text-gray-500 dark:text-gray-400">
+            {expedientes.length} expediente{expedientes.length !== 1 ? 's' : ''}
+          </span>
+        </div>
+        
+        {isLoadingExpedientes ? (
+          <div className="flex justify-center items-center py-8">
+            <div className="text-center">
+              <svg className="animate-spin h-8 w-8 text-emerald-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              <span>Expedientes Asociados</span>
+              <p className="mt-2 text-gray-600 dark:text-gray-300">Cargando expedientes...</p>
             </div>
-            <Link to={`/expedientes/nuevo?dni=${datos.DNI}`}>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="hover:bg-blue-900/20 hover:border-blue-700/50"
-              >
-                <span className="flex items-center space-x-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  <span>Nuevo Expediente</span>
-                </span>
-              </Button>
-            </Link>
           </div>
-        }
-        className="border-gray-800 hover:border-blue-900/30 transition-all duration-300"
-      >
-        {/* Si hay expedientes, mostrarlos en una tabla o lista */}
-        {expedientes.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead>
-                <tr className="border-b border-gray-800">
-                  <th className="py-3 text-left text-sm font-medium text-gray-400 tracking-wider">Expediente</th>
-                  <th className="py-3 text-left text-sm font-medium text-gray-400 tracking-wider">Fecha</th>
-                  <th className="py-3 text-left text-sm font-medium text-gray-400 tracking-wider">Localidad</th>
-                  <th className="py-3 text-left text-sm font-medium text-gray-400 tracking-wider">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="stagger-fade">
-                {expedientes.map((expediente) => (
-                  <tr key={expediente.ID} className="hover:bg-gray-800/50 transition-colors duration-200 border-b border-gray-800">
-                    <td className="py-4 px-2 whitespace-nowrap font-medium">{expediente.EXPEDIENTE}</td>
-                    <td className="py-4 px-2 whitespace-nowrap">
-                      {expediente.FECHA ? new Date(expediente.FECHA).toLocaleDateString('es-ES') : '—'}
-                    </td>
-                    <td className="py-4 px-2 whitespace-nowrap">{expediente.LOCALIDAD || '—'}</td>
-                    <td className="py-4 px-2 whitespace-nowrap">
-                      <Link to={`/expedientes/${expediente.ID}`}>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="hover:bg-amber-800/40 hover:border-amber-700 transition-all duration-300"
-                        >
-                          <span className="inline-flex items-center">
-                            <span>Ver</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 ml-1 transition-transform">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                          </span>
-                        </Button>
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        ) : expedientes.length === 0 ? (
+          <div className="text-center py-8">
+            <div className="flex flex-col items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <p className="text-lg text-gray-500 dark:text-gray-400 mb-2">No hay expedientes</p>
+              <p className="text-sm text-gray-400 dark:text-gray-500">Esta persona no tiene expedientes asociados</p>
+            </div>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <p className="mt-4 text-gray-400">Esta persona no tiene expedientes registrados</p>
-            <Link to={`/expedientes/nuevo?dni=${datos.DNI}`} className="mt-4">
-              <Button 
-                variant="primary"
-                className="bg-blue-700 hover:bg-blue-600 transition-all duration-300"
+          <div className="space-y-3">
+            {expedientes.map((expediente) => (
+              <div 
+                key={expediente.ID}
+                className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                onClick={() => navigate(`/expedientes/${expediente.ID}`)}
               >
-                <span className="flex items-center space-x-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h4 className="font-medium text-gray-800 dark:text-gray-200">
+                      Expediente: {expediente.EXPEDIENTE}
+                    </h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      Fecha: {expediente.FECHA ? new Date(expediente.FECHA).toLocaleDateString() : 'Sin fecha'}
+                    </p>
+                    {expediente.LUGAR && (
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Lugar: {expediente.LUGAR}
+                      </p>
+                    )}
+                  </div>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
-                  <span>Crear nuevo expediente</span>
-                </span>
-              </Button>
-            </Link>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </Card>

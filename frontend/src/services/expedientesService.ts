@@ -16,17 +16,28 @@ export async function getExpedientes(): Promise<Expediente[]> {
 export async function getRecentExpedientes(limit = 3): Promise<Expediente[]> {
   try {
     const expedientes = await getExpedientes();
+    console.log('Todos los expedientes obtenidos:', expedientes.length); // Debug
+    
     if (!Array.isArray(expedientes)) {
       console.warn('La respuesta no es un array:', expedientes);
       return [];
     }
-    return expedientes
+
+    // Filtrar duplicados por ID antes de ordenar
+    const expedientesUnicos = expedientes.filter((expediente, index, array) => 
+      array.findIndex(e => e.ID === expediente.ID) === index
+    );
+
+    const resultado = expedientesUnicos
       .sort((a, b) => {
         const fechaA = a.FECHA ? new Date(a.FECHA).getTime() : 0;
         const fechaB = b.FECHA ? new Date(b.FECHA).getTime() : 0;
-        return fechaA < fechaB ? 1 : fechaA > fechaB ? -1 : 0;
+        return fechaB - fechaA;
       })
       .slice(0, limit);
+
+    console.log('Expedientes recientes filtrados:', resultado.length); // Debug
+    return resultado;
   } catch (error) {
     console.error('Error al obtener expedientes recientes:', error);
     return [];
