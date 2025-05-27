@@ -1,38 +1,82 @@
-Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)
+# Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)
 
-Author: Yeray García Martínez  
-Contact: yeraygarciamartinez5@gmail.com  
-Year: 2025
-
-This software and its source code are licensed under the Creative Commons Attribution-NonCommercial 4.0 International License.
-
-Summary of the license:
-
-You are free to:
-- **Share** — Copy and redistribute the material in any medium or format.
-- **Adapt** — Remix, transform, and build upon the material.
-
-Under the following conditions:
-- **Attribution** — You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
-- **NonCommercial** — You may not use the material for commercial purposes. Commercial use is strictly prohibited under this license.
-
-Definitions:
-- **Commercial use**: Any use that is primarily intended for or directed toward commercial advantage or monetary compensation.
-- **Material**: Refers to the software, source code, documentation, and any other files included in this repository.
-
-Limitations:
-- No rights are granted under this license to use any trademarks, logos, or brand names associated with the software.
-- No warranties are given. The software is provided "as is", without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, and non-infringement.
-- The authors shall not be liable for any damages, direct or indirect, arising from the use of the software.
-
-Additional obligations:
-- If you modify, adapt, or build upon the material, you must clearly indicate the changes made.
-- If you redistribute the material, you must include a copy of this license or a link to it.
-- You may not apply legal terms or technological measures that legally restrict others from doing anything the license permits.
-
-For more information and the full legal text of the license, visit:  
-https://creativecommons.org/licenses/by-nc/4.0/legalcode
+**Author:** Yeray García Martínez  
+**Contact:** yeraygarciamartinez5@gmail.com  
+**Year:** 2025
 
 ---
 
-**Note:** If you wish to use this software for commercial purposes, you must request and obtain express written permission from the original author.
+## 📄 License Summary
+
+This software and its source code are licensed under the Creative Commons Attribution-NonCommercial 4.0 International License.
+
+### ✅ Permissions
+
+You are free to:
+
+- **🔄 Share** — Copy and redistribute the material in any medium or format
+- **🔧 Adapt** — Remix, transform, and build upon the material
+
+### 📋 Conditions
+
+Under the following conditions:
+
+- **📝 Attribution** — You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
+
+- **🚫 NonCommercial** — You may not use the material for commercial purposes. Commercial use is strictly prohibited under this license.
+
+---
+
+## 📖 Definitions
+
+| Term | Definition |
+|------|------------|
+| **Commercial use** | Any use that is primarily intended for or directed toward commercial advantage or monetary compensation |
+| **Material** | Refers to the software, source code, documentation, and any other files included in this repository |
+
+---
+
+## ⚠️ Limitations and Disclaimers
+
+### Limitations
+- ❌ No rights are granted under this license to use any trademarks, logos, or brand names associated with the software
+- ❌ No warranties are given. The software is provided "as is"
+
+### Disclaimer of Warranty
+> **Important:** The software is provided "as is", without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, and non-infringement. The authors shall not be liable for any damages, direct or indirect, arising from the use of the software.
+
+---
+
+## 📝 Additional Obligations
+
+If you modify, adapt, or build upon the material:
+
+1. **📌 Indicate changes** — You must clearly indicate the changes made
+2. **📄 Include license** — You must include a copy of this license or a link to it
+3. **🔓 No restrictions** — You may not apply legal terms or technological measures that legally restrict others from doing anything the license permits
+
+---
+
+## 🔗 Reference Links
+
+- **Full legal text:** [CC BY-NC 4.0 Legal Code](https://creativecommons.org/licenses/by-nc/4.0/legalcode)
+- **Human-readable summary:** [CC BY-NC 4.0 Deed](https://creativecommons.org/licenses/by-nc/4.0/)
+
+---
+
+## 💼 Commercial Use
+
+> **Important Note:** If you wish to use this software for commercial purposes, you must request and obtain express written permission from the original author.
+
+**For commercial licensing inquiries, contact:**  
+📧 yeraygarciamartinez5@gmail.com
+
+---
+
+<div align="center">
+
+**© 2025 Yeray García Martínez - All rights reserved**
+
+[![CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
+
+</div>
