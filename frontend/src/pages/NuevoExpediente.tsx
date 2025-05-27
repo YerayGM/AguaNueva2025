@@ -30,6 +30,7 @@ type Concepto = {
   PARCELA: number | string
   RECINTO: string
   CULTIVO: string
+  CUATRIMESTRE: number // Nuevo campo para identificar el cuatrimestre
 }
 
 const NuevoExpedientePage: React.FC = () => {
@@ -144,6 +145,19 @@ const NuevoExpedientePage: React.FC = () => {
     getMaterias().then(setMaterias);
   }, [location.pathname]);
   
+  // Cambiar el estado de conceptos para organizarlos por cuatrimestre
+  const [conceptosPorCuatrimestre, setConceptosPorCuatrimestre] = useState<{
+    1: Concepto[],
+    2: Concepto[],
+    3: Concepto[]
+  }>({
+    1: [],
+    2: [],
+    3: []
+  })
+  
+  const [cuatrimestreActivo, setCuatrimestreActivo] = useState<1 | 2 | 3>(1)
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (conceptos.length === 0) {
@@ -205,14 +219,29 @@ const NuevoExpedientePage: React.FC = () => {
       const expedienteCreado = await createExpediente(expedienteData);
 
       // Supón que tienes una función createDatosExpediente en tu servicio
-      for (const concepto of conceptosLimpios) {
-        await createDatosExpediente({
-          ...concepto,
-          EXPEDIENTE: codigoExpediente,
-          HOJA: Number(hoja)
-        });
+      for (const concepto of todosLosConceptos) {
+        if (concepto.ID_MATERIA && concepto.CANTIDAD) {
+          await createDatosExpediente({
+            ...concepto,
+            EXPEDIENTE: codigoExpediente,
+            HOJA: Number(hoja),
+            ID_MATERIA: Number(concepto.ID_MATERIA),
+            MULTIPLICADOR: Number(concepto.MULTIPLICADOR) || 0,
+            MINIMO: Number(concepto.MINIMO) || 0,
+            MAXIMO: Number(concepto.MAXIMO) || 0,
+            ORDEN: Number(concepto.ORDEN) || 0,
+            CANTIDAD: Number(concepto.CANTIDAD) || 0,
+            CANTIDAD_I: Number(concepto.CANTIDAD_I) || 0,
+            POLIGONO: Number(concepto.POLIGONO) || 0,
+            PARCELA: Number(concepto.PARCELA) || 0,
+            RECINTO: concepto.RECINTO || '',
+            CULTIVO: concepto.CULTIVO || '',
+            DESDE: concepto.DESDE || '',
+            HASTA: concepto.HASTA || ''
+          })
+        }
       }
-
+      
       await fetchUltimoExpediente(); // <-- vuelve a calcular el código
       setConceptos([]); // limpia conceptos si quieres
       // limpia el resto de campos si lo necesitas
@@ -230,51 +259,63 @@ const NuevoExpedientePage: React.FC = () => {
     }
   };
   // Cambiar materia y autocompletar campos relacionados
-  const handleMateriaChange = (idx: number, idMateria: number) => {
+  const handleMateriaChange = (cuatrimestre: 1 | 2 | 3, idx: number, idMateria: number) => {
     const materia = materias.find(m => m.ID === idMateria);
-    setConceptos(prev => {
-      const updated = [...prev];
-      if (materia) {
-        updated[idx] = {
-          ...updated[idx],
-          ID_MATERIA: materia.ID,
-          MULTIPLICADOR: materia.MULTIPLICADOR,
-          MINIMO: materia.MINIMO,
-          MAXIMO: materia.MAXIMO,
-          ORDEN: materia.ORDEN,
-        };
-      }
-      return updated;
-    });
+    setConceptosPorCuatrimestre(prev => ({
+      ...prev,
+      [cuatrimestre]: prev[cuatrimestre].map((concepto, i) =>
+        i === idx ? {
+          ...concepto,
+          ID_MATERIA: materia?.ID || '',
+          MULTIPLICADOR: materia?.MULTIPLICADOR || '',
+          MINIMO: materia?.MINIMO || '',
+          MAXIMO: materia?.MAXIMO || '',
+          ORDEN: materia?.ORDEN || '',
+        } : concepto
+      )
+    }));
   };
 
   // Cambiar otros campos
-  const handleConceptoChange = (idx: number, field: keyof Concepto, value: string | number) => {
-    setConceptos(prev => {
-      const updated = [...prev];
-      updated[idx] = { ...updated[idx], [field]: value };
-      return updated;
-    });
+  const handleConceptoChange = (cuatrimestre: 1 | 2 | 3, idx: number, field: keyof Concepto, value: string | number) => {
+    setConceptosPorCuatrimestre(prev => ({
+      ...prev,
+      [cuatrimestre]: prev[cuatrimestre].map((concepto, i) =>
+        i === idx ? { ...concepto, [field]: value } : concepto
+      )
+    }));
   };
 
-  const addConcepto = () => setConceptos(prev => [...prev, {
-    ID_MATERIA: '',
-    MULTIPLICADOR: '',
-    MINIMO: '',
-    MAXIMO: '',
-    ORDEN: '',
-    CANTIDAD: '',
-    CANTIDAD_I: '',
-    DESDE: '',
-    HASTA: '',
-    POLIGONO: '',
-    PARCELA: '',
-    RECINTO: '',
-    CULTIVO: ''
-  }]);
+  // Función para añadir concepto al cuatrimestre actual
+  const addConcepto = (cuatrimestre: 1 | 2 | 3) => {
+    setConceptosPorCuatrimestre(prev => ({
+      ...prev,
+      [cuatrimestre]: [...prev[cuatrimestre], {
+        ID_MATERIA: '',
+        MULTIPLICADOR: '',
+        MINIMO: '',
+        MAXIMO: '',
+        ORDEN: '',
+        CANTIDAD: '',
+        CANTIDAD_I: '',
+        DESDE: '',
+        HASTA: '',
+        POLIGONO: '',
+        PARCELA: '',
+        RECINTO: '',
+        CULTIVO: '',
+        CUATRIMESTRE: cuatrimestre
+      }]
+    }))
+  }
 
-  // Eliminar fila
-  const removeConcepto = (idx: number) => setConceptos(prev => prev.filter((_, i) => i !== idx));
+  // Función para eliminar concepto de un cuatrimestre específico
+  const removeConcepto = (cuatrimestre: 1 | 2 | 3, idx: number) => {
+    setConceptosPorCuatrimestre(prev => ({
+      ...prev,
+      [cuatrimestre]: prev[cuatrimestre].filter((_, i) => i !== idx)
+    }))
+  }
 
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -295,15 +336,16 @@ const NuevoExpedientePage: React.FC = () => {
                 label: 'Datos Básicos'
               },
               {
-                id: 'informe-tecnico',
+                id: 'informe-tecnico', 
                 label: 'Informe Técnico'
               },
               {
                 id: 'cuatrimestres',
-                label: 'Cuatrimestres'
+                label: 'Conceptos por Cuatrimestre'
               }
             ]}
           >
+            {/* Pestaña de datos básicos */}
             <div id="datos-basicos" className="grid grid-cols-1 md:grid-cols-2 gap-6 p-1 transition-all duration-300 stagger-fade">
               <div className="col-span-1 md:col-span-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mb-2 shadow-inner">
                 <h3 className="text-md font-medium text-blue-800 dark:text-blue-300 mb-3 flex items-center">
@@ -390,7 +432,9 @@ const NuevoExpedientePage: React.FC = () => {
                 placeholder="Observaciones"
               />
             </div>
-            <div id="informe-tecnico" className="grid grid-cols-1 md:grid-cols-2 gap-6 p-1 stagger-fade">
+
+            {/* Pestaña de informe técnico */}
+            <div id="informe-tecnico" className="grid grid-cols-1 md:grid-cols-2 gap-6 p-1 transition-all duration-300 stagger-fade">
               <div className="col-span-1 md:col-span-2 bg-green-50 dark:bg-green-900/20 rounded-lg p-4 mb-2 shadow-inner">
                 <h3 className="text-md font-medium text-green-800 dark:text-green-300 mb-3 flex items-center">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -457,187 +501,255 @@ const NuevoExpedientePage: React.FC = () => {
                 ]}
               />
             </div>
-            <div id="cuatrimestres" className="col-span-1 md:col-span-2">
+
+            {/* Pestaña de cuatrimestres */}
+            <div id="cuatrimestres" className="space-y-6">
+              {/* Pestañas de cuatrimestres */}
+              <div className="border-b border-gray-200 dark:border-gray-700">
+                <nav className="-mb-px flex space-x-8">
+                  {[1, 2, 3].map((cuatrimestre) => (
+                    <button
+                      key={cuatrimestre}
+                      type="button"
+                      onClick={() => setCuatrimestreActivo(cuatrimestre as 1 | 2 | 3)}
+                      className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-all duration-300 ${
+                        cuatrimestreActivo === cuatrimestre
+                          ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                      }`}
+                    >
+                      <span className="flex items-center space-x-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span>{cuatrimestre}º Cuatrimestre</span>
+                        {conceptosPorCuatrimestre[cuatrimestre as 1 | 2 | 3].length > 0 && (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                            {conceptosPorCuatrimestre[cuatrimestre as 1 | 2 | 3].length}
+                          </span>
+                        )}
+                      </span>
+                    </button>
+                  ))}
+                </nav>
+              </div>
+
+              {/* Contenido del cuatrimestre activo */}
               <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                <div className="flex justify-between items-center px-4 py-2 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-                  <h3 className="text-base font-semibold text-gray-700 dark:text-gray-200">Conceptos del Cuatrimestre</h3>
+                <div className="flex justify-between items-center px-4 py-3 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+                  <h3 className="text-base font-semibold text-gray-700 dark:text-gray-200 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Conceptos del {cuatrimestreActivo}º Cuatrimestre
+                  </h3>
                   <Button
                     type="button"
-                    onClick={addConcepto}
+                    onClick={() => addConcepto(cuatrimestreActivo)}
                     variant="primary"
-                    className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-white"
+                    className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded text-white transition-all duration-300"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
-                    <span>Añadir concepto</span>
+                    <span>Añadir Concepto</span>
                   </Button>
                 </div>
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                  <thead className="bg-gray-50 dark:bg-gray-900">
-                    <tr>
-                      <th className="py-3 px-4 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Concepto</th>
-                      <th className="py-3 px-4 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Multi</th>
-                      <th className="py-3 px-4 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Mini</th>
-                      <th className="py-3 px-4 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Cant.</th>
-                      <th className="py-3 px-4 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Inf.</th>
-                      <th className="py-3 px-4 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Desde</th>
-                      <th className="py-3 px-4 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Hasta</th>
-                      <th className="py-3 px-4 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Polígono</th>
-                      <th className="py-3 px-4 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Parcela</th>
-                      <th className="py-3 px-4 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Recinto</th>
-                      <th className="py-3 px-4 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Cultivo</th>
-                      <th className="py-3 px-4"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {conceptos.length === 0 ? (
+
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead className="bg-gray-50 dark:bg-gray-900">
                       <tr>
-                        <td className="py-8 px-6 text-center text-gray-400" colSpan={12}>
-                          <div className="flex flex-col items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            <p className="text-lg mb-2">No hay conceptos añadidos</p>
-                            <p className="text-sm">Haz clic en <b>Añadir concepto</b> para agregar uno nuevo</p>
-                          </div>
-                        </td>
+                        <th className="py-3 px-4 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Concepto</th>
+                        <th className="py-3 px-4 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Multi</th>
+                        <th className="py-3 px-4 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Mini</th>
+                        <th className="py-3 px-4 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Máx</th>
+                        <th className="py-3 px-4 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Cant.</th>
+                        <th className="py-3 px-4 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Inf.</th>
+                        <th className="py-3 px-4 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Desde</th>
+                        <th className="py-3 px-4 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Hasta</th>
+                        <th className="py-3 px-4 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Polígono</th>
+                        <th className="py-3 px-4 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Parcela</th>
+                        <th className="py-3 px-4 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Recinto</th>
+                        <th className="py-3 px-4 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">Cultivo</th>
+                        <th className="py-3 px-4"></th>
                       </tr>
-                    ) : conceptos.map((concepto, idx) => (
-                      <tr key={idx} className="hover:bg-blue-50 dark:hover:bg-blue-900/30 transition">
-                        <td className="py-2 px-4">
-                          <Select
-                            value={concepto.ID_MATERIA || ''}
-                            onChange={val => handleMateriaChange(idx, Number(val))}
-                            options={[
-                              { label: 'Selecciona materia', value: '' },
-                              ...materias.map(m => ({
-                                label: m.MATERIA,
-                                value: m.ID
-                              }))
-                            ]}
-                            required
-                            className="w-44"
-                          />
-                        </td>
-                        <td className="py-2 px-2">
-                          <Input
-                            type="number"
-                            value={concepto.MULTIPLICADOR}
-                            onChange={e => handleConceptoChange(idx, 'MULTIPLICADOR', Number(e.target.value))}
-                            disabled
-                            className="w-16 text-center"
-                            placeholder="Multi"
-                          />
-                        </td>
-                        <td className="py-2 px-2">
-                          <Input
-                            type="number"
-                            value={concepto.MINIMO}
-                            onChange={e => handleConceptoChange(idx, 'MINIMO', Number(e.target.value))}
-                            disabled
-                            className="w-16 text-center"
-                            placeholder="Mini"
-                          />
-                        </td>
-                        <td className="py-2 px-2">
-                          <Input
-                            type="number"
-                            value={concepto.CANTIDAD}
-                            onChange={e => handleConceptoChange(idx, 'CANTIDAD', Number(e.target.value))}
-                            className="w-16 text-center"
-                            placeholder="Cantidad"
-                          />
-                        </td>
-                        <td className="py-2 px-2">
-                          <Input
-                            type="number"
-                            value={concepto.CANTIDAD_I}
-                            onChange={e => handleConceptoChange(idx, 'CANTIDAD_I', Number(e.target.value))}
-                            className="w-16 text-center"
-                            placeholder="Inf."
-                          />
-                        </td>
-                        <td className="py-2 px-2">
-                          <Input
-                            type="date"
-                            value={concepto.DESDE}
-                            onChange={e => handleConceptoChange(idx, 'DESDE', e.target.value)}
-                            className="w-32 text-center"
-                          />
-                        </td>
-                        <td className="py-2 px-2">
-                          <Input
-                            type="date"
-                            value={concepto.HASTA}
-                            onChange={e => handleConceptoChange(idx, 'HASTA', e.target.value)}
-                            className="w-32 text-center"
-                          />
-                        </td>
-                        <td className="py-2 px-2">
-                          <Input
-                            type="number"
-                            value={concepto.POLIGONO || ''}
-                            onChange={e => handleConceptoChange(idx, 'POLIGONO', Number(e.target.value))}
-                            className="w-16 text-center"
-                            placeholder="Polígono"
-                          />
-                        </td>
-                        <td className="py-2 px-2">
-                          <Input
-                            type="number"
-                            value={concepto.PARCELA || ''}
-                            onChange={e => handleConceptoChange(idx, 'PARCELA', Number(e.target.value))}
-                            className="w-16 text-center"
-                            placeholder="Parcela"
-                          />
-                        </td>
-                        <td className="py-2 px-2">
-                          <Input
-                            value={concepto.RECINTO || ''}
-                            onChange={e => handleConceptoChange(idx, 'RECINTO', e.target.value)}
-                            className="w-16 text-center"
-                            placeholder="Recinto"
-                          />
-                        </td>
-                        <td className="py-2 px-2">
-                          <Input
-                            value={concepto.CULTIVO}
-                            onChange={e => handleConceptoChange(idx, 'CULTIVO', e.target.value)}
-                            className="w-24 text-center"
-                            placeholder="Cultivo"
-                          />
-                        </td>
-                        <td className="py-2 px-2 text-center">
-                          <Button
-                            type="button"
-                            onClick={() => removeConcepto(idx)}
-                            variant="outline"
-                            className="text-red-600 border-red-200 hover:bg-red-50 dark:hover:bg-red-900/20 px-2 py-1"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                      {conceptosPorCuatrimestre[cuatrimestreActivo].length === 0 ? (
+                        <tr>
+                          <td className="py-8 px-6 text-center text-gray-400" colSpan={13}>
+                            <div className="flex flex-col items-center">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                              <p className="text-lg mb-2">No hay conceptos en este cuatrimestre</p>
+                              <p className="text-sm">Haz clic en <b>Añadir Concepto</b> para agregar uno nuevo</p>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : (
+                        conceptosPorCuatrimestre[cuatrimestreActivo].map((concepto, idx) => (
+                          <tr key={idx} className="hover:bg-blue-50 dark:hover:bg-blue-900/30 transition">
+                            <td className="py-2 px-4">
+                              <Select
+                                value={concepto.ID_MATERIA || ''}
+                                onChange={val => handleMateriaChange(cuatrimestreActivo, idx, Number(val))}
+                                options={[
+                                  { label: 'Selecciona materia', value: '' },
+                                  ...materias.map(m => ({
+                                    label: m.MATERIA,
+                                    value: m.ID
+                                  }))
+                                ]}
+                                required
+                                className="w-44"
+                              />
+                            </td>
+                            <td className="py-2 px-2">
+                              <Input
+                                type="number"
+                                value={concepto.MULTIPLICADOR}
+                                onChange={e => handleConceptoChange(cuatrimestreActivo, idx, 'MULTIPLICADOR', Number(e.target.value))}
+                                disabled
+                                className="w-16 text-center"
+                                placeholder="Multi"
+                              />
+                            </td>
+                            <td className="py-2 px-2">
+                              <Input
+                                type="number"
+                                value={concepto.MINIMO}
+                                onChange={e => handleConceptoChange(cuatrimestreActivo, idx, 'MINIMO', Number(e.target.value))}
+                                disabled
+                                className="w-16 text-center"
+                                placeholder="Mini"
+                              />
+                            </td>
+                            <td className="py-2 px-2">
+                              <Input
+                                type="number"
+                                value={concepto.MAXIMO}
+                                onChange={e => handleConceptoChange(cuatrimestreActivo, idx, 'MAXIMO', Number(e.target.value))}
+                                disabled
+                                className="w-16 text-center"
+                                placeholder="Máx"
+                              />
+                            </td>
+                            <td className="py-2 px-2">
+                              <Input
+                                type="number"
+                                value={concepto.CANTIDAD}
+                                onChange={e => handleConceptoChange(cuatrimestreActivo, idx, 'CANTIDAD', Number(e.target.value))}
+                                className="w-16 text-center"
+                                placeholder="Cantidad"
+                              />
+                            </td>
+                            <td className="py-2 px-2">
+                              <Input
+                                type="number"
+                                value={concepto.CANTIDAD_I}
+                                onChange={e => handleConceptoChange(cuatrimestreActivo, idx, 'CANTIDAD_I', Number(e.target.value))}
+                                className="w-16 text-center"
+                                placeholder="Inf."
+                              />
+                            </td>
+                            <td className="py-2 px-2">
+                              <Input
+                                type="date"
+                                value={concepto.DESDE}
+                                onChange={e => handleConceptoChange(cuatrimestreActivo, idx, 'DESDE', e.target.value)}
+                                className="w-32 text-center"
+                              />
+                            </td>
+                            <td className="py-2 px-2">
+                              <Input
+                                type="date"
+                                value={concepto.HASTA}
+                                onChange={e => handleConceptoChange(cuatrimestreActivo, idx, 'HASTA', e.target.value)}
+                                className="w-32 text-center"
+                              />
+                            </td>
+                            <td className="py-2 px-2">
+                              <Input
+                                type="number"
+                                value={concepto.POLIGONO || ''}
+                                onChange={e => handleConceptoChange(cuatrimestreActivo, idx, 'POLIGONO', Number(e.target.value))}
+                                className="w-16 text-center"
+                                placeholder="Polígono"
+                              />
+                            </td>
+                            <td className="py-2 px-2">
+                              <Input
+                                type="number"
+                                value={concepto.PARCELA || ''}
+                                onChange={e => handleConceptoChange(cuatrimestreActivo, idx, 'PARCELA', Number(e.target.value))}
+                                className="w-16 text-center"
+                                placeholder="Parcela"
+                              />
+                            </td>
+                            <td className="py-2 px-2">
+                              <Input
+                                value={concepto.RECINTO || ''}
+                                onChange={e => handleConceptoChange(cuatrimestreActivo, idx, 'RECINTO', e.target.value)}
+                                className="w-16 text-center"
+                                placeholder="Recinto"
+                              />
+                            </td>
+                            <td className="py-2 px-2">
+                              <Input
+                                value={concepto.CULTIVO}
+                                onChange={e => handleConceptoChange(cuatrimestreActivo, idx, 'CULTIVO', e.target.value)}
+                                className="w-24 text-center"
+                                placeholder="Cultivo"
+                              />
+                            </td>
+                            <td className="py-2 px-2 text-center">
+                              <Button
+                                type="button"
+                                onClick={() => removeConcepto(cuatrimestreActivo, idx)}
+                                variant="outline"
+                                className="text-red-600 border-red-200 hover:bg-red-50 dark:hover:bg-red-900/20 px-2 py-1"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </Button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Resumen de conceptos por cuatrimestre */}
+              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+                <h4 className="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-3">Resumen de Conceptos</h4>
+                <div className="grid grid-cols-3 gap-4">
+                  {[1, 2, 3].map((cuatrimestre) => (
+                    <div key={cuatrimestre} className="text-center">
+                      <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                        {conceptosPorCuatrimestre[cuatrimestre as 1 | 2 | 3].length}
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                        {cuatrimestre}º Cuatrimestre
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </Tabs>
+
+          {/* Botones de acción */}
           <div className="mt-8 flex justify-end space-x-4">
             <Button
               type="button"
               variant="outline"
               onClick={() => navigate(-1)}
-              className="border-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-300 px-6"
-              icon={
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              }
+              className="hover:bg-gray-800 transition-all duration-300"
             >
               Cancelar
             </Button>
@@ -645,10 +757,10 @@ const NuevoExpedientePage: React.FC = () => {
               type="submit"
               variant="primary"
               isLoading={isLoading}
-              className="bg-blue-600 hover:bg-blue-700 transition-all duration-300 px-8 shadow-lg hover:shadow-xl"
+              className="bg-blue-600 hover:bg-blue-700 transition-all duration-300 shadow-lg"
               icon={
-                !isLoading && (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                isLoading ? undefined : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
                 )
@@ -660,7 +772,7 @@ const NuevoExpedientePage: React.FC = () => {
         </form>
       </Card>
     </div>
-  );
-};
+  )
+}
 
-export default NuevoExpedientePage;
+export default NuevoExpedientePage

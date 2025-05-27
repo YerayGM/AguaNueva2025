@@ -4,8 +4,10 @@ import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
 import Table from '../components/ui/Table'
-import type { DatosPersonales } from '../types'
+import Select from '../components/ui/Select'
+import type { DatosPersonales, Municipio } from '../types'
 import { getDatosPersonales, searchDatosPersonales } from '../services/datosPersonalesService'
+import { getMunicipios } from '../services/municipiosService'
 import { toast } from 'react-hot-toast'
 
 const DatosPersonalesPage: React.FC = () => {
@@ -13,6 +15,15 @@ const DatosPersonalesPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [searchNombre, setSearchNombre] = useState('')
   const [searchApellidos, setSearchApellidos] = useState('')
+  const [searchDni, setSearchDni] = useState('')
+  const [searchEmail, setSearchEmail] = useState('')
+  const [searchTelefono, setSearchTelefono] = useState('')
+  const [searchLocalidad, setSearchLocalidad] = useState('')
+  const [searchMunicipio, setSearchMunicipio] = useState('')
+  const [tipoPersona, setTipoPersona] = useState('') // fisica, juridica, todas
+  const [tipoActividad, setTipoActividad] = useState('') // profesional, parcial, todas
+  const [municipios, setMunicipios] = useState<Municipio[]>([])
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(10)
   const navigate = useNavigate()
@@ -30,6 +41,16 @@ const DatosPersonalesPage: React.FC = () => {
     }
   }
   
+  const loadMunicipios = async () => {
+    try {
+      const data = await getMunicipios()
+      setMunicipios(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.error('Error al cargar municipios:', error)
+      toast.error('Error al cargar municipios')
+    }
+  }
+
   const handleSearch = async () => {
     if (!searchNombre && !searchApellidos) {
       toast.error('Debe ingresar al menos un criterio de búsqueda')
@@ -49,15 +70,93 @@ const DatosPersonalesPage: React.FC = () => {
     }
   }
   
+  const handleAdvancedSearch = async () => {
+    setIsLoading(true)
+    try {
+      let datos = await getDatosPersonales()
+      
+      // Aplicar filtros
+      if (searchNombre) {
+        datos = datos.filter(d => 
+          d.NOMBREC?.toLowerCase().includes(searchNombre.toLowerCase())
+        )
+      }
+      
+      if (searchApellidos) {
+        datos = datos.filter(d => 
+          d.APELLIDOS?.toLowerCase().includes(searchApellidos.toLowerCase())
+        )
+      }
+      
+      if (searchDni) {
+        datos = datos.filter(d => 
+          d.DNI?.toLowerCase().includes(searchDni.toLowerCase())
+        )
+      }
+      
+      if (searchEmail) {
+        datos = datos.filter(d => 
+          d.EMAIL?.toLowerCase().includes(searchEmail.toLowerCase())
+        )
+      }
+      
+      if (searchTelefono) {
+        datos = datos.filter(d => 
+          d.TELEFONO?.includes(searchTelefono)
+        )
+      }
+      
+      if (searchLocalidad) {
+        datos = datos.filter(d => 
+          d.LOCALIDAD?.toLowerCase().includes(searchLocalidad.toLowerCase())
+        )
+      }
+      
+      if (searchMunicipio) {
+        datos = datos.filter(d => 
+          d.ID_MUN?.toString() === searchMunicipio
+        )
+      }
+      
+      if (tipoPersona === 'fisica') {
+        datos = datos.filter(d => d.PER_FIS === true)
+      } else if (tipoPersona === 'juridica') {
+        datos = datos.filter(d => d.PER_JUR === true)
+      }
+      
+      if (tipoActividad === 'profesional') {
+        datos = datos.filter(d => d.AGRI_PRO === true)
+      } else if (tipoActividad === 'parcial') {
+        datos = datos.filter(d => d.AGRI_PARCIAL === true)
+      }
+      
+      setDatosPersonales(datos)
+      setCurrentPage(1)
+    } catch (error) {
+      toast.error('Error al realizar la búsqueda avanzada')
+      console.error('Error en búsqueda avanzada:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+  
   const handleReset = () => {
     setSearchNombre('')
     setSearchApellidos('')
+    setSearchDni('')
+    setSearchEmail('')
+    setSearchTelefono('')
+    setSearchLocalidad('')
+    setSearchMunicipio('')
+    setTipoPersona('')
+    setTipoActividad('')
     loadDatosPersonales()
     setCurrentPage(1)
   }
   
   useEffect(() => {
     loadDatosPersonales()
+    loadMunicipios()
   }, [])
   
   // Lógica de paginación
@@ -177,78 +276,249 @@ const DatosPersonalesPage: React.FC = () => {
         </div>
       </div>
       
-      <Card 
-        title={
-          <div className="flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            <span>Búsqueda de Personas</span>
-          </div>
-        }
-        className="hover:shadow-md transition-all duration-300 border-gray-800"
-      >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="relative">
-            <Input
-              label="Nombre"
-              value={searchNombre}
-              onChange={(e) => setSearchNombre(e.target.value)}
-              placeholder="Buscar por nombre"
-              className="pl-9"
-            />
-            <div className="absolute left-3 top-9 text-gray-500">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
+      {/* Filtros de búsqueda mejorados */}
+      <div className="grid grid-cols-1 gap-6 stagger-fade">
+        <Card 
+          className="hover:shadow-xl transition-all duration-300 border-gray-800 bg-gradient-to-br from-gray-900 to-gray-800"
+        >
+          <div className="space-y-6">
+            {/* Header de búsqueda */}
+            <div className="flex items-center justify-between pb-4 border-b border-gray-700">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 rounded-lg bg-blue-600/20">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Búsqueda de Personas</h3>
+                  <p className="text-sm text-gray-400">
+                    {showAdvancedSearch ? 'Utilice múltiples criterios para una búsqueda más precisa' : 'Búsqueda rápida por nombre y apellidos'}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-400">
+                  {showAdvancedSearch ? 'Avanzada' : 'Simple'}
+                </span>
+                <button
+                  onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 ${
+                    showAdvancedSearch ? 'bg-blue-600' : 'bg-gray-600'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300 ${
+                      showAdvancedSearch ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
             </div>
-          </div>
-          
-          <div className="relative">
-            <Input
-              label="Apellidos"
-              value={searchApellidos}
-              onChange={(e) => setSearchApellidos(e.target.value)}
-              placeholder="Buscar por apellidos"
-              className="pl-9"
-            />
-            <div className="absolute left-3 top-9 text-gray-500">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
-              </svg>
+
+            {!showAdvancedSearch ? (
+              // Búsqueda simple mejorada
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="relative group">
+                    <Input
+                      label="Nombre"
+                      value={searchNombre}
+                      onChange={(e) => setSearchNombre(e.target.value)}
+                      placeholder="Buscar por nombre"
+                      className="pl-10 transition-all duration-300 focus:ring-2 focus:ring-blue-500"
+                    />
+                    <div className="absolute left-3 top-9 text-gray-500 group-focus-within:text-blue-400 transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                  </div>
+                  
+                  <div className="relative group">
+                    <Input
+                      label="Apellidos"
+                      value={searchApellidos}
+                      onChange={(e) => setSearchApellidos(e.target.value)}
+                      placeholder="Buscar por apellidos"
+                      className="pl-10 transition-all duration-300 focus:ring-2 focus:ring-blue-500"
+                    />
+                    <div className="absolute left-3 top-9 text-gray-500 group-focus-within:text-blue-400 transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              // Búsqueda avanzada mejorada
+              <div className="space-y-6">
+                {/* Sección: Datos personales */}
+                <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+                  <div className="flex items-center mb-4">
+                    <div className="w-1 h-6 bg-blue-500 rounded-full mr-3"></div>
+                    <h4 className="text-md font-semibold text-white">Datos Personales</h4>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="relative group">
+                      <Input
+                        label="Nombre"
+                        value={searchNombre}
+                        onChange={(e) => setSearchNombre(e.target.value)}
+                        placeholder="Buscar por nombre"
+                        className="transition-all duration-300 focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    
+                    <div className="relative group">
+                      <Input
+                        label="Apellidos"
+                        value={searchApellidos}
+                        onChange={(e) => setSearchApellidos(e.target.value)}
+                        placeholder="Buscar por apellidos"
+                        className="transition-all duration-300 focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    
+                    <div className="relative group">
+                      <Input
+                        label="DNI/NIE"
+                        value={searchDni}
+                        onChange={(e) => setSearchDni(e.target.value)}
+                        placeholder="Buscar por DNI"
+                        className="transition-all duration-300 focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sección: Contacto */}
+                <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+                  <div className="flex items-center mb-4">
+                    <div className="w-1 h-6 bg-green-500 rounded-full mr-3"></div>
+                    <h4 className="text-md font-semibold text-white">Información de Contacto</h4>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="relative group">
+                      <Input
+                        label="Email"
+                        value={searchEmail}
+                        onChange={(e) => setSearchEmail(e.target.value)}
+                        placeholder="Buscar por email"
+                        className="transition-all duration-300 focus:ring-2 focus:ring-green-500"
+                      />
+                    </div>
+                    
+                    <div className="relative group">
+                      <Input
+                        label="Teléfono"
+                        value={searchTelefono}
+                        onChange={(e) => setSearchTelefono(e.target.value)}
+                        placeholder="Buscar por teléfono"
+                        className="transition-all duration-300 focus:ring-2 focus:ring-green-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sección: Ubicación */}
+                <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+                  <div className="flex items-center mb-4">
+                    <div className="w-1 h-6 bg-purple-500 rounded-full mr-3"></div>
+                    <h4 className="text-md font-semibold text-white">Ubicación</h4>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="relative group">
+                      <Input
+                        label="Localidad"
+                        value={searchLocalidad}
+                        onChange={(e) => setSearchLocalidad(e.target.value)}
+                        placeholder="Buscar por localidad"
+                        className="transition-all duration-300 focus:ring-2 focus:ring-purple-500"
+                      />
+                    </div>
+                    
+                    <div className="relative group">
+                      <Select
+                        label="Municipio"
+                        value={searchMunicipio}
+                        onChange={(value) => setSearchMunicipio(value)}
+                        options={[
+                          { label: 'Todos los municipios', value: '' },
+                          ...municipios.map((municipio) => ({
+                            label: municipio.MUNICIPIO,
+                            value: municipio.ID_MUN.toString(),
+                          })),
+                        ]}
+                        className="transition-all duration-300 focus:ring-2 focus:ring-purple-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Botones de acción mejorados */}
+            <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-700">
+              <Button
+                variant="outline"
+                onClick={handleReset}
+                className="flex-1 sm:flex-none hover:bg-red-600/20 hover:border-red-500/50 hover:text-red-400 transition-all duration-300 group"
+              >
+                <span className="flex items-center justify-center space-x-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 group-hover:rotate-180 transition-transform duration-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  <span>Limpiar Filtros</span>
+                </span>
+              </Button>
+              
+              <Button
+                variant="primary"
+                onClick={showAdvancedSearch ? handleAdvancedSearch : handleSearch}
+                isLoading={isLoading}
+                className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+              >
+                <span className="flex items-center justify-center space-x-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <span>{isLoading ? 'Buscando...' : 'Buscar Personas'}</span>
+                </span>
+              </Button>
             </div>
+
+            {/* Indicador de filtros activos */}
+            {(searchNombre || searchApellidos || searchDni || searchEmail || searchTelefono || searchLocalidad || searchMunicipio || tipoPersona || tipoActividad) && (
+              <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-700">
+                <span className="text-xs text-gray-400 mr-2">Filtros activos:</span>
+                {searchNombre && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-600/20 text-blue-300 border border-blue-600/30">
+                    Nombre: {searchNombre}
+                  </span>
+                )}
+                {searchApellidos && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-600/20 text-blue-300 border border-blue-600/30">
+                    Apellidos: {searchApellidos}
+                  </span>
+                )}
+                {searchDni && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-600/20 text-blue-300 border border-blue-600/30">
+                    DNI: {searchDni}
+                  </span>
+                )}
+                {searchMunicipio && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-purple-600/20 text-purple-300 border border-purple-600/30">
+                    Municipio: {municipios.find(m => m.ID_MUN.toString() === searchMunicipio)?.MUNICIPIO}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
-        </div>
-        
-        <div className="mt-6 flex justify-end space-x-3">
-          <Button
-            variant="outline"
-            onClick={handleReset}
-            className="hover:bg-gray-800 hover:border-gray-600 transition-all duration-300"
-          >
-            <span className="flex items-center space-x-2">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              <span>Limpiar</span>
-            </span>
-          </Button>
-          
-          <Button
-            variant="primary"
-            onClick={handleSearch}
-            isLoading={isLoading}
-            className="bg-blue-700 hover:bg-blue-600 transition-all duration-300"
-          >
-            <span className="flex items-center space-x-2">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <span>Buscar</span>
-            </span>
-          </Button>
-        </div>
-      </Card>
+        </Card>
+      </div>
       
       <Card className="border-gray-800/50 hover:border-gray-700 transition-all duration-300">
         <Table

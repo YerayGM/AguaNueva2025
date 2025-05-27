@@ -18,6 +18,13 @@ const ExpedientesPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [searchDni, setSearchDni] = useState('')
   const [searchMunicipio, setSearchMunicipio] = useState('')
+  const [searchExpediente, setSearchExpediente] = useState('')
+  const [searchLugar, setSearchLugar] = useState('')
+  const [searchLocalidad, setSearchLocalidad] = useState('')
+  const [fechaDesde, setFechaDesde] = useState('')
+  const [fechaHasta, setFechaHasta] = useState('')
+  const [searchTecnico, setSearchTecnico] = useState('')
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(10)
   const [estadisticas, setEstadisticas] = useState({
@@ -98,9 +105,107 @@ const ExpedientesPage: React.FC = () => {
     }
   }
 
+  const handleSearchByExpediente = async () => {
+    if (!searchExpediente) {
+      toast.error('Debe ingresar un número de expediente para buscar')
+      return
+    }
+    
+    setIsLoading(true)
+    try {
+      const expedientesData = await getExpedientes()
+      const filtered = expedientesData.filter(exp => 
+        exp.EXPEDIENTE?.toLowerCase().includes(searchExpediente.toLowerCase())
+      )
+      setExpedientes(filtered)
+      setCurrentPage(1)
+    } catch (error) {
+      toast.error('Error al buscar por expediente')
+      console.error('Error al buscar por expediente:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleAdvancedSearch = async () => {
+    setIsLoading(true)
+    try {
+      let expedientesData = await getExpedientes()
+      
+      // Aplicar filtros
+      if (searchDni) {
+        expedientesData = expedientesData.filter(exp => 
+          exp.DNI?.toLowerCase().includes(searchDni.toLowerCase())
+        )
+      }
+      
+      if (searchMunicipio) {
+        expedientesData = expedientesData.filter(exp => 
+          exp.ID_MUN?.toString() === searchMunicipio
+        )
+      }
+      
+      if (searchExpediente) {
+        expedientesData = expedientesData.filter(exp => 
+          exp.EXPEDIENTE?.toLowerCase().includes(searchExpediente.toLowerCase())
+        )
+      }
+      
+      if (searchLugar) {
+        expedientesData = expedientesData.filter(exp => 
+          exp.LUGAR?.toLowerCase().includes(searchLugar.toLowerCase())
+        )
+      }
+      
+      if (searchLocalidad) {
+        expedientesData = expedientesData.filter(exp => 
+          exp.LOCALIDAD?.toLowerCase().includes(searchLocalidad.toLowerCase())
+        )
+      }
+      
+      if (searchTecnico) {
+        expedientesData = expedientesData.filter(exp => 
+          exp.TECNICO?.toLowerCase().includes(searchTecnico.toLowerCase())
+        )
+      }
+      
+      if (fechaDesde) {
+        expedientesData = expedientesData.filter(exp => {
+          if (!exp.FECHA) return false
+          const fechaExp = new Date(exp.FECHA)
+          const fechaMin = new Date(fechaDesde)
+          return fechaExp >= fechaMin
+        })
+      }
+      
+      if (fechaHasta) {
+        expedientesData = expedientesData.filter(exp => {
+          if (!exp.FECHA) return false
+          const fechaExp = new Date(exp.FECHA)
+          const fechaMax = new Date(fechaHasta)
+          return fechaExp <= fechaMax
+        })
+      }
+      
+      setExpedientes(expedientesData)
+      setCurrentPage(1)
+    } catch (error) {
+      toast.error('Error al realizar la búsqueda avanzada')
+      console.error('Error en búsqueda avanzada:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const handleReset = () => {
     setSearchDni('')
     setSearchMunicipio('')
+    setSearchExpediente('')
+    setSearchLugar('')
+    setSearchLocalidad('')
+    setFechaDesde('')
+    setFechaHasta('')
+    setSearchTecnico('')
     loadExpedientes()
     setCurrentPage(1)
   }
@@ -239,107 +344,269 @@ const ExpedientesPage: React.FC = () => {
         </div>
       </div>
       
-      {/* Filtros de búsqueda */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 stagger-fade">
+      {/* Filtros de búsqueda mejorados */}
+      <div className="grid grid-cols-1 gap-6 stagger-fade">
         <Card 
-          title={
-            <div className="flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
-              </svg>
-              <span>Búsqueda por DNI</span>
-            </div>
-          }
-          className="border-amber-900/20 hover:border-amber-700/30 transition-all duration-300 hover:shadow-md"
+          className="hover:shadow-xl transition-all duration-300 border-amber-800/30 bg-gradient-to-br from-amber-900/20 to-gray-900"
         >
-          <div className="flex items-end gap-4">
-            <div className="relative flex-grow">
-              <Input
-                label="DNI/NIE del solicitante"
-                value={searchDni}
-                onChange={(e) => setSearchDni(e.target.value)}
-                placeholder="Introducir DNI sin guiones ni espacios"
-                className="pl-9"
-              />
-              <div className="absolute left-3 top-9 text-gray-500">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
+          <div className="space-y-6">
+            {/* Header de búsqueda */}
+            <div className="flex items-center justify-between pb-4 border-b border-amber-800/30">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 rounded-lg bg-amber-600/20">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Búsqueda de Expedientes</h3>
+                  <p className="text-sm text-gray-400">
+                    {showAdvancedSearch ? 'Combine múltiples criterios para encontrar expedientes específicos' : 'Búsqueda rápida por DNI o municipio'}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-400">
+                  {showAdvancedSearch ? 'Avanzada' : 'Simple'}
+                </span>
+                <button
+                  onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 ${
+                    showAdvancedSearch ? 'bg-amber-600' : 'bg-gray-600'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300 ${
+                      showAdvancedSearch ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
               </div>
             </div>
-            
-            <Button
-              variant="primary"
-              onClick={handleSearchByDni}
-              isLoading={isLoading}
-              className="bg-amber-800 hover:bg-amber-700 transition-all duration-300 flex-shrink-0"
-            >
-              <span className="flex items-center space-x-2">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <span>Buscar</span>
-              </span>
-            </Button>
-          </div>
-          <p className="mt-2 text-xs text-gray-500">
-            Busca expedientes asociados a un solicitante específico por su DNI/NIE
-          </p>
-        </Card>
-        
-        <Card 
-          title={
-            <div className="flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              <span>Búsqueda por Municipio</span>
-            </div>
-          }
-          className="border-amber-900/20 hover:border-amber-700/30 transition-all duration-300 hover:shadow-md"
-        >
-          <div className="flex items-end gap-4">
-            <div className="relative flex-grow">
-              <Select
-                label="Seleccione un municipio"
-                value={searchMunicipio}
-                onChange={(value) => setSearchMunicipio(value)}
-                options={[
-                  { label: 'Seleccione un municipio', value: '' },
-                  ...(Array.isArray(municipios)
-                    ? municipios.map((municipio) => ({
-                        label: municipio.MUNICIPIO,
-                        value: municipio.ID_MUN.toString(),
-                      }))
-                    : []),
-                ]}
-                className="pl-9"
-              />
-              <div className="absolute left-3 top-9 text-gray-500">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
+
+            {!showAdvancedSearch ? (
+              // Búsqueda simple mejorada
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="relative group">
+                    <Input
+                      label="DNI/NIE del solicitante"
+                      value={searchDni}
+                      onChange={(e) => setSearchDni(e.target.value)}
+                      placeholder="Introducir DNI sin guiones ni espacios"
+                      className="pl-10 transition-all duration-300 focus:ring-2 focus:ring-amber-500"
+                    />
+                    <div className="absolute left-3 top-9 text-gray-500 group-focus-within:text-amber-400 transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+                      </svg>
+                    </div>
+                  </div>
+                  
+                  <div className="relative group">
+                    <Select
+                      label="Seleccione un municipio"
+                      value={searchMunicipio}
+                      onChange={(value) => setSearchMunicipio(value)}
+                      options={[
+                        { label: 'Todos los municipios', value: '' },
+                        ...municipios.map((municipio) => ({
+                          label: municipio.MUNICIPIO,
+                          value: municipio.ID_MUN.toString(),
+                        })),
+                      ]}
+                      className="transition-all duration-300 focus:ring-2 focus:ring-amber-500"
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
+            ) : (
+              // Búsqueda avanzada mejorada
+              <div className="space-y-6">
+                {/* Sección: Identificación */}
+                <div className="bg-amber-900/10 rounded-lg p-6 border border-amber-800/30">
+                  <div className="flex items-center mb-4">
+                    <div className="w-1 h-6 bg-amber-500 rounded-full mr-3"></div>
+                    <h4 className="text-md font-semibold text-white">Identificación del Expediente</h4>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="relative group">
+                      <Input
+                        label="DNI/NIE"
+                        value={searchDni}
+                        onChange={(e) => setSearchDni(e.target.value)}
+                        placeholder="DNI del solicitante"
+                        className="transition-all duration-300 focus:ring-2 focus:ring-amber-500"
+                      />
+                    </div>
+                    
+                    <div className="relative group">
+                      <Input
+                        label="Nº Expediente"
+                        value={searchExpediente}
+                        onChange={(e) => setSearchExpediente(e.target.value)}
+                        placeholder="Código de expediente"
+                        className="transition-all duration-300 focus:ring-2 focus:ring-amber-500"
+                      />
+                    </div>
+                    
+                    <div className="relative group">
+                      <Input
+                        label="Técnico Responsable"
+                        value={searchTecnico}
+                        onChange={(e) => setSearchTecnico(e.target.value)}
+                        placeholder="Nombre del técnico"
+                        className="transition-all duration-300 focus:ring-2 focus:ring-amber-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sección: Ubicación */}
+                <div className="bg-blue-900/10 rounded-lg p-6 border border-blue-800/30">
+                  <div className="flex items-center mb-4">
+                    <div className="w-1 h-6 bg-blue-500 rounded-full mr-3"></div>
+                    <h4 className="text-md font-semibold text-white">Ubicación del Proyecto</h4>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="relative group">
+                      <Input
+                        label="Lugar"
+                        value={searchLugar}
+                        onChange={(e) => setSearchLugar(e.target.value)}
+                        placeholder="Lugar del expediente"
+                        className="transition-all duration-300 focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    
+                    <div className="relative group">
+                      <Input
+                        label="Localidad"
+                        value={searchLocalidad}
+                        onChange={(e) => setSearchLocalidad(e.target.value)}
+                        placeholder="Localidad"
+                        className="transition-all duration-300 focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    
+                    <div className="relative group">
+                      <Select
+                        label="Municipio"
+                        value={searchMunicipio}
+                        onChange={(value) => setSearchMunicipio(value)}
+                        options={[
+                          { label: 'Todos los municipios', value: '' },
+                          ...municipios.map((municipio) => ({
+                            label: municipio.MUNICIPIO,
+                            value: municipio.ID_MUN.toString(),
+                          })),
+                        ]}
+                        className="transition-all duration-300 focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sección: Fechas */}
+                <div className="bg-green-900/10 rounded-lg p-6 border border-green-800/30">
+                  <div className="flex items-center mb-4">
+                    <div className="w-1 h-6 bg-green-500 rounded-full mr-3"></div>
+                    <h4 className="text-md font-semibold text-white">Rango de Fechas</h4>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="relative group">
+                      <Input
+                        label="Fecha Desde"
+                        type="date"
+                        value={fechaDesde}
+                        onChange={(e) => setFechaDesde(e.target.value)}
+                        className="transition-all duration-300 focus:ring-2 focus:ring-green-500"
+                      />
+                    </div>
+                    
+                    <div className="relative group">
+                      <Input
+                        label="Fecha Hasta"
+                        type="date"
+                        value={fechaHasta}
+                        onChange={(e) => setFechaHasta(e.target.value)}
+                        className="transition-all duration-300 focus:ring-2 focus:ring-green-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
             
-            <Button
-              variant="primary"
-              onClick={handleSearchByMunicipio}
-              isLoading={isLoading}
-              className="bg-amber-800 hover:bg-amber-700 transition-all duration-300 flex-shrink-0"
-            >
-              <span className="flex items-center space-x-2">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <span>Buscar</span>
-              </span>
-            </Button>
+            {/* Botones de acción mejorados */}
+            <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-amber-800/30">
+              <Button
+                variant="outline"
+                onClick={handleReset}
+                className="flex-1 sm:flex-none hover:bg-red-600/20 hover:border-red-500/50 hover:text-red-400 transition-all duration-300 group"
+              >
+                <span className="flex items-center justify-center space-x-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 group-hover:rotate-180 transition-transform duration-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  <span>Limpiar Filtros</span>
+                </span>
+              </Button>
+              
+              <Button
+                variant="primary"
+                onClick={showAdvancedSearch ? handleAdvancedSearch : (searchDni ? handleSearchByDni : handleSearchByMunicipio)}
+                isLoading={isLoading}
+                className="flex-1 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+              >
+                <span className="flex items-center justify-center space-x-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <span>{isLoading ? 'Buscando...' : 'Buscar Expedientes'}</span>
+                </span>
+              </Button>
+              
+              {!showAdvancedSearch && searchExpediente && (
+                <Button
+                  variant="secondary"
+                  onClick={handleSearchByExpediente}
+                  isLoading={isLoading}
+                  className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 transition-all duration-300"
+                >
+                  Buscar por Expediente
+                </Button>
+              )}
+            </div>
+
+            {/* Indicador de filtros activos */}
+            {(searchDni || searchExpediente || searchLugar || searchLocalidad || searchMunicipio || searchTecnico || fechaDesde || fechaHasta) && (
+              <div className="flex flex-wrap gap-2 pt-2 border-t border-amber-800/30">
+                <span className="text-xs text-gray-400 mr-2">Filtros activos:</span>
+                {searchDni && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-amber-600/20 text-amber-300 border border-amber-600/30">
+                    DNI: {searchDni}
+                  </span>
+                )}
+                {searchExpediente && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-amber-600/20 text-amber-300 border border-amber-600/30">
+                    Expediente: {searchExpediente}
+                  </span>
+                )}
+                {searchMunicipio && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-600/20 text-blue-300 border border-blue-600/30">
+                    Municipio: {municipios.find(m => m.ID_MUN.toString() === searchMunicipio)?.MUNICIPIO}
+                  </span>
+                )}
+                {(fechaDesde || fechaHasta) && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-600/20 text-green-300 border border-green-600/30">
+                    Fechas: {fechaDesde} - {fechaHasta}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
-          <p className="mt-2 text-xs text-gray-500">
-            Filtra expedientes por localidad o municipio de la isla
-          </p>
         </Card>
       </div>
       
