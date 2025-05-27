@@ -373,41 +373,42 @@ const VerExpedientePage: React.FC = () => {
         <div className="flex gap-2">
           <PDFDownloadLink
             document={
-              datosPersonales
+              expediente && datosPersonales
                 ? <CompromisosPDF expediente={expediente} persona={datosPersonales} />
                 : <span />
             }
             fileName={`Compromisos_${expediente?.EXPEDIENTE}.pdf`}
           >
             {({ loading }) => (
-              <Button variant="outline" disabled={loading || !datosPersonales}>
+              <Button variant="outline" disabled={loading || !expediente || !datosPersonales}>
                 {loading ? 'Generando...' : 'Compromisos'}
               </Button>
             )}
           </PDFDownloadLink>
           <PDFDownloadLink
-            document={<DeclaracionActividadPDF expediente={expediente} conceptos={datosExpedientes} />}
+            document={
+              expediente
+                ? <DeclaracionActividadPDF expediente={expediente} conceptos={datosExpedientes} />
+                : <span />
+            }
             fileName={`DeclaracionActividad_${expediente?.EXPEDIENTE}.pdf`}
           >
             {({ loading }) => (
-              <Button variant="outline" disabled={loading}>
+              <Button variant="outline" disabled={loading || !expediente}>
+                {loading ? 'Generando...' : 'Declaración Actividad'}
+              </Button>
+            )}
+          </PDFDownloadLink>
           <PDFDownloadLink
             document={
-              <InformeTecnicoPDF
-                expediente={{
-                  ...expediente,
-                  ID_MUN: expediente.ID_MUN?.toString?.() ?? ''
-                }}
-              />
+              expediente
+                ? <InformeTecnicoPDF expediente={{ ...expediente, ID_MUN: String(expediente.ID_MUN) }} />
+                : <span />
             }
             fileName={`InformeTecnico_${expediente?.EXPEDIENTE}.pdf`}
           >
             {({ loading }) => (
-              <Button variant="outline" disabled={loading}>
-                {loading ? 'Generando...' : 'Informe Técnico'}
-              </Button>
-            )}
-          </PDFDownloadLink>
+              <Button variant="outline" disabled={loading || !expediente}>
                 {loading ? 'Generando...' : 'Informe Técnico'}
               </Button>
             )}
