@@ -16,18 +16,15 @@ export async function getExpedientes(): Promise<Expediente[]> {
 export async function getRecentExpedientes(limit = 3): Promise<Expediente[]> {
   try {
     const expedientes = await getExpedientes();
-    
-    // Prevenir error si expedientes no es iterable
     if (!Array.isArray(expedientes)) {
       console.warn('La respuesta no es un array:', expedientes);
       return [];
     }
-    
     return expedientes
       .sort((a, b) => {
         const fechaA = a.FECHA ? new Date(a.FECHA).getTime() : 0;
         const fechaB = b.FECHA ? new Date(b.FECHA).getTime() : 0;
-        return fechaB - fechaA;
+        return fechaA < fechaB ? 1 : fechaA > fechaB ? -1 : 0;
       })
       .slice(0, limit);
   } catch (error) {

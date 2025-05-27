@@ -37,6 +37,6 @@ export async function updateDatosExpediente(id: number, datos: Partial<DatosExpe
 }
 
 // Eliminar datos de expediente
-export async function deleteDatosExpediente(id: number): Promise<void> {
-  return api.delete<void>(`/datos-expedientes/${id}`);
+export async function deleteDatosExpediente(id: number) {
+  return api.delete(`/datos-expedientes/${id}`);
 }

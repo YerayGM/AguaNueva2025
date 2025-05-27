@@ -10,9 +10,9 @@ import { getExpedienteById } from '../services/expedientesService'
 import { getMunicipios } from '../services/municipiosService'
 import { toast } from 'react-hot-toast'
 import { format } from 'date-fns'
-import { updateDatosExpediente, createDatosExpediente, getDatosExpedienteByNumero } from '../services/datosExpedientesService'
-import { getMaterias } from '../services/materiasService' // Debes tener este servicio
-import { updateExpediente } from '../services/expedientesService'; // Asegúrate de tener este método
+import { updateDatosExpediente, createDatosExpediente, getDatosExpedienteByNumero, deleteDatosExpediente } from '../services/datosExpedientesService'
+import { getMaterias } from '../services/materiasService'
+import { updateExpediente } from '../services/expedientesService';
 
 const EditarExpedientePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -46,6 +46,7 @@ const EditarExpedientePage: React.FC = () => {
   
   // Estado para los conceptos asociados al expediente
   const [conceptos, setConceptos] = useState<DatosExpediente[]>([]);
+  const [conceptosOriginales, setConceptosOriginales] = useState<DatosExpediente[]>([]);
 
   // Manejar cambios en los conceptos
   const handleConceptoChange = (
@@ -158,6 +159,7 @@ const EditarExpedientePage: React.FC = () => {
       const data = await getDatosExpedienteByNumero(formData.EXPEDIENTE);
       if (Array.isArray(data)) {
         setConceptos(data);
+        setConceptosOriginales(data); // Guarda copia original
       } else if (
         data &&
         typeof data === 'object' &&
@@ -165,11 +167,14 @@ const EditarExpedientePage: React.FC = () => {
         Array.isArray((data as { data: DatosExpediente[] }).data)
       ) {
         setConceptos((data as { data: DatosExpediente[] }).data);
+        setConceptosOriginales((data as { data: DatosExpediente[] }).data); // Guardar los conceptos originales
       } else {
         setConceptos([]);
+        setConceptosOriginales([]); // Limpiar conceptos originales si no hay datos
       }
     } catch {
       setConceptos([]);
+      setConceptosOriginales([]); // Limpiar conceptos originales en caso de error
     }
   }, [formData.EXPEDIENTE]);
 
@@ -179,7 +184,6 @@ const EditarExpedientePage: React.FC = () => {
     if (id) {
       loadExpediente();
     }
-    // eslint-disable-next-line
   }, [id, loadExpediente, loadMunicipios, loadMaterias]);
 
   useEffect(() => {
@@ -207,7 +211,7 @@ const EditarExpedientePage: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      // 1. Limpia los datos antes de actualizar el expediente
+      // 1. Actualiza expediente
       if (formData.ID) {
         const camposValidos = [
           'HOJA', 'DNI', 'FECHA', 'LUGAR', 'LOCALIDAD', 'ID_MUN', 'CONT_NOMBRE', 'CONT_POLIZA',
@@ -222,9 +226,14 @@ const EditarExpedientePage: React.FC = () => {
         await updateExpediente(formData.ID.toString(), expedienteLimpio);
       }
 
-      // 2. (Opcional) Elimina conceptos borrados (ver respuesta anterior)
+      // 2. Elimina los conceptos que estaban y ya no están
+      const idsActuales = conceptos.filter(c => c.ID).map(c => c.ID);
+      const eliminados = conceptosOriginales.filter(c => c.ID && !idsActuales.includes(c.ID));
+      for (const concepto of eliminados) {
+        await deleteDatosExpediente(concepto.ID);
+      }
 
-      // 3. Actualiza o crea los conceptos
+      // 3. Actualiza o crea conceptos
       for (const concepto of conceptos) {
         const conceptoLimpio = limpiarConcepto(concepto);
         if (concepto.ID) {
@@ -274,7 +283,6 @@ const EditarExpedientePage: React.FC = () => {
 
   function limpiarConcepto(concepto: any) {
     const limpio: any = {};
-    // Lista de campos válidos según tu DTO
     const camposValidos = [
       'EXPEDIENTE', 'HOJA', 'ORDEN', 'ID_MATERIA', 'MULTIPLICADOR', 'MINIMO', 'MAXIMO',
       'CANTIDAD', 'CANTIDAD_I', 'DESDE', 'HASTA', 'POLIGONO', 'PARCELA', 'RECINTO', 'CULTIVO'
