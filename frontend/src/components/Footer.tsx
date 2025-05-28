@@ -35,20 +35,16 @@ const Footer: React.FC = () => {
             <address className="not-italic text-sm text-gray-600 dark:text-gray-400 space-y-2">
               <p>Cabildo de Fuerteventura</p>
               <p>C/ Primero de Mayo, 39</p>
-              <p>35600 Puerto del Rosario</p>
-              <p>Tel: 928 86 23 00</p>
+              <p>35600, Puerto del Rosario</p>
               <p>aguanueva@cabildofuer.es</p>
             </address>
           </div>
         </div>
         
-        <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 flex flex-col md:flex-row justify-between items-center">
+        <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 flex flex-col md:flex-row justify-center items-center">
           <p className="text-xs text-gray-500 dark:text-gray-400 text-center md:text-left">
             &copy; {currentYear} Cabildo de Fuerteventura. Todos los derechos reservados.
           </p>
-          <div className="mt-4 md:mt-0 text-xs text-gray-500 dark:text-gray-400">
-            <span>Desarrollo: Consejería de Agricultura, Ganadería y Pesca</span>
-          </div>
         </div>
       </div>
     </footer>
