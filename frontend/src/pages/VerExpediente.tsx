@@ -118,6 +118,26 @@ const VerExpedientePage: React.FC = () => {
   
   const datosExpedientesColumns = [
     {
+      header: 'Cuatrimestre',
+      accessor: 'CUATRI',
+      render: (value: unknown): React.ReactNode => {
+        const cuatrimestre = value as number;
+        return (
+          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+            cuatrimestre === 1 
+              ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+              : cuatrimestre === 2
+              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+              : cuatrimestre === 3
+              ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+              : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+          }`}>
+            {cuatrimestre ? `${cuatrimestre}º Cuatrimestre` : 'Sin asignar'}
+          </span>
+        );
+      }
+    },
+    {
       header: 'Materia',
       accessor: 'ID_MATERIA',
       render: (value: unknown): React.ReactNode => {
@@ -344,6 +364,7 @@ const VerExpedientePage: React.FC = () => {
         </Card>
       </div>
       
+      {/* Sección de conceptos mejorada */}
       <Card 
         title="Conceptos del Expediente"
         actions={
@@ -353,11 +374,42 @@ const VerExpedientePage: React.FC = () => {
         }
       >
         {datosExpedientes.length > 0 ? (
-          <Table
-            columns={datosExpedientesColumns}
-            data={datosExpedientes as unknown as Record<string, unknown>[]}
-            isLoading={isLoading}
-          />
+          <div className="space-y-4">
+            {/* Resumen por cuatrimestres */}
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+              <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                Resumen por Cuatrimestres
+              </h4>
+              <div className="grid grid-cols-3 gap-4">
+                {[1, 2, 3].map(cuatrimestre => {
+                  const conceptosCuatrimestre = datosExpedientes.filter(d => d.CUATRI === cuatrimestre);
+                  return (
+                    <div key={cuatrimestre} className="text-center">
+                      <div className={`text-2xl font-bold ${
+                        cuatrimestre === 1 
+                          ? 'text-blue-600 dark:text-blue-400'
+                          : cuatrimestre === 2
+                          ? 'text-green-600 dark:text-green-400'
+                          : 'text-purple-600 dark:text-purple-400'
+                      }`}>
+                        {conceptosCuatrimestre.length}
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                        {cuatrimestre}º Cuatrimestre
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Tabla de conceptos */}
+            <Table
+              columns={datosExpedientesColumns}
+              data={datosExpedientes as unknown as Record<string, unknown>[]}
+              isLoading={isLoading}
+            />
+          </div>
         ) : (
           <div className="text-center py-8 text-gray-500">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -30,7 +30,7 @@ type Concepto = {
   PARCELA: number | string
   RECINTO: string
   CULTIVO: string
-  CUATRIMESTRE: number // Nuevo campo para identificar el cuatrimestre
+  CUATRIMESTRE: number
 }
 
 const NuevoExpedientePage: React.FC = () => {
@@ -43,7 +43,6 @@ const NuevoExpedientePage: React.FC = () => {
   const [municipios, setMunicipios] = useState<Municipio[]>([])
   const [datosPersona, setDatosPersona] = useState<DatosPersonales | null>(null)
   const [materias, setMaterias] = useState<Materia[]>([])
-  const [conceptos, setConceptos] = useState<Concepto[]>([]);
 
   // Form state
   const [dni, setDni] = useState(dniParam || '')
@@ -159,44 +158,34 @@ const NuevoExpedientePage: React.FC = () => {
   const [cuatrimestreActivo, setCuatrimestreActivo] = useState<1 | 2 | 3>(1)
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (conceptos.length === 0) {
-      toast.error('Debes añadir al menos un concepto/cuatrimestre.');
-      setIsLoading(false);
-      return;
-    }
-    if (!hoja || isNaN(Number(hoja)) || Number(hoja) < 1) {
-      toast.error('El campo HOJA es obligatorio y debe ser un número mayor que 0');
-      setIsLoading(false);
-      return;
-    }
-    setIsLoading(true);
+    e.preventDefault()
     
-    const conceptosLimpios = conceptos
-      .filter(c => c.ID_MATERIA && c.CANTIDAD)
-      .map(c => ({
-        ...c,
-        ID_MATERIA: Number(c.ID_MATERIA),
-        MULTIPLICADOR: Number(c.MULTIPLICADOR) || 0,
-        MINIMO: Number(c.MINIMO) || 0,
-        MAXIMO: Number(c.MAXIMO) || 0,
-        ORDEN: Number(c.ORDEN) || 0,
-        CANTIDAD: Number(c.CANTIDAD) || 0,
-        CANTIDAD_I: Number(c.CANTIDAD_I) || 0,
-        POLIGONO: Number(c.POLIGONO) || 0,
-        PARCELA: Number(c.PARCELA) || 0,
-        RECINTO: c.RECINTO || '',
-        CULTIVO: c.CULTIVO || '',
-        DESDE: c.DESDE || '',
-        HASTA: c.HASTA || ''
-      }));
-
-    if (conceptosLimpios.length === 0) {
-      toast.error('Debes añadir al menos un concepto/cuatrimestre válido.');
-      setIsLoading(false);
-      return;
+    // Combinar todos los conceptos de todos los cuatrimestres
+    const todosLosConceptos = [
+      ...conceptosPorCuatrimestre[1],
+      ...conceptosPorCuatrimestre[2], 
+      ...conceptosPorCuatrimestre[3]
+    ]
+    
+    // Filtrar conceptos válidos (que tengan materia y cantidad)
+    const conceptosValidos = todosLosConceptos.filter(concepto => 
+      concepto.ID_MATERIA && 
+      concepto.CANTIDAD && 
+      Number(concepto.CANTIDAD) > 0
+    )
+    
+    if (conceptosValidos.length === 0) {
+      toast.error('Debes añadir al menos un concepto válido en algún cuatrimestre.')
+      return
     }
-
+    
+    if (!hoja || isNaN(Number(hoja)) || Number(hoja) < 1) {
+      toast.error('El campo HOJA es obligatorio y debe ser un número mayor que 0')
+      return
+    }
+    
+    setIsLoading(true)
+    
     try {
       const expedienteData = {
         EXPEDIENTE: codigoExpediente,
@@ -214,48 +203,63 @@ const NuevoExpedientePage: React.FC = () => {
         DIAS: Number(dias) || 1,
         OB_TEC: obsTecnicas || 'Sin observación técnica',
         TXT_INFORME: textoInforme || 'Sin informe'
-      };
+      }
 
-      const expedienteCreado = await createExpediente(expedienteData);
+      const expedienteCreado = await createExpediente(expedienteData)
 
-      // Supón que tienes una función createDatosExpediente en tu servicio
-      for (const concepto of todosLosConceptos) {
-        if (concepto.ID_MATERIA && concepto.CANTIDAD) {
-          await createDatosExpediente({
-            ...concepto,
-            EXPEDIENTE: codigoExpediente,
-            HOJA: Number(hoja),
-            ID_MATERIA: Number(concepto.ID_MATERIA),
-            MULTIPLICADOR: Number(concepto.MULTIPLICADOR) || 0,
-            MINIMO: Number(concepto.MINIMO) || 0,
-            MAXIMO: Number(concepto.MAXIMO) || 0,
-            ORDEN: Number(concepto.ORDEN) || 0,
-            CANTIDAD: Number(concepto.CANTIDAD) || 0,
-            CANTIDAD_I: Number(concepto.CANTIDAD_I) || 0,
-            POLIGONO: Number(concepto.POLIGONO) || 0,
-            PARCELA: Number(concepto.PARCELA) || 0,
-            RECINTO: concepto.RECINTO || '',
-            CULTIVO: concepto.CULTIVO || '',
-            DESDE: concepto.DESDE || '',
-            HASTA: concepto.HASTA || ''
-          })
-        }
+      // Crear conceptos usando los conceptos válidos
+      for (const concepto of conceptosValidos) {
+        await createDatosExpediente({
+          EXPEDIENTE: codigoExpediente,
+          HOJA: Number(hoja),
+          ID_MATERIA: Number(concepto.ID_MATERIA),
+          MULTIPLICADOR: Number(concepto.MULTIPLICADOR) || 0,
+          MINIMO: Number(concepto.MINIMO) || 0,
+          MAXIMO: Number(concepto.MAXIMO) || 0,
+          ORDEN: Number(concepto.ORDEN) || 0,
+          CANTIDAD: Number(concepto.CANTIDAD) || 0,
+          CANTIDAD_I: Number(concepto.CANTIDAD_I) || 0,
+          POLIGONO: Number(concepto.POLIGONO) || 0,
+          PARCELA: Number(concepto.PARCELA) || 0,
+          RECINTO: concepto.RECINTO || '',
+          CULTIVO: concepto.CULTIVO || '',
+          DESDE: concepto.DESDE || '',
+          HASTA: concepto.HASTA || '',
+          CUATRI: concepto.CUATRIMESTRE
+    })
       }
       
-      await fetchUltimoExpediente(); // <-- vuelve a calcular el código
-      setConceptos([]); // limpia conceptos si quieres
-      // limpia el resto de campos si lo necesitas
+      toast.success('Expediente creado correctamente')
+      
+      // Limpiar formulario
+      await fetchUltimoExpediente()
+      setConceptosPorCuatrimestre({
+        1: [],
+        2: [],
+        3: []
+      })
+      
+      // Limpiar otros campos si es necesario
+      setDni('')
+      setLugar('')
+      setLocalidad('')
+      setObservaciones('')
+      setTecnico('')
+      setObsTecnicas('')
+      setTextoInforme('')
 
-      navigate(`/expedientes/editar/${expedienteCreado.ID}`);
+      navigate(`/expedientes/editar/${expedienteCreado.ID}`)
     } catch (error: unknown) {
+      console.error('Error al crear expediente:', error)
+      
       if (typeof error === 'object' && error !== null && 'response' in error) {
-        // @ts-expect-error: response may exist in error
-        toast.error(error.response?.data?.message || 'Error al crear expediente y conceptos');
+        const apiError = error as { response: { data: { message: string } } }
+        toast.error(apiError.response?.data?.message || 'Error al crear expediente')
       } else {
-        toast.error('Error al crear expediente y conceptos');
+        toast.error('Error al crear expediente y conceptos')
       }
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
   };
   // Cambiar materia y autocompletar campos relacionados
