@@ -31,7 +31,7 @@ const Header: React.FC = () => {
             <div className="relative">
               <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-md group-hover:bg-emerald-500/30 transition-all duration-300"></div>
               <img 
-                src="../../public/vite.svg" 
+                src="/vite.svg" 
                 alt="Agua Nueva" 
                 className="h-10 w-10 object-contain relative z-10 transition-transform duration-300 group-hover:scale-110" 
               />

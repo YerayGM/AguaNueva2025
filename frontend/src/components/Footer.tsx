@@ -9,7 +9,7 @@ const Footer: React.FC = () => {
             <div className="flex items-center space-x-3 mb-4">
               <div className="h-12 w-12 flex items-center justify-center bg-blue-200 rounded-md">
                 <img 
-                  src="../../public/vite.svg" 
+                  src="/vite.svg" 
                   alt="Agua Nueva" 
                   className="h-10 w-10 object-contain" 
                 />
